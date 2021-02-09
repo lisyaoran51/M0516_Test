@@ -9,13 +9,13 @@ int main(){
 	
 	Pi2c* interface = new Pi2c(0x15);
 	
-	char tmp[3];
+	char tmp[11];
 	while(1){
 		int ret = interface->i2cRead(tmp, 10);
-		
+		tmp[10] = '\0';
 		//if(ret != -1 && tmp[0] != 0){
 			
-			std::cout << ret << " " << int(tmp[0]) << (int)tmp[1] << (int)tmp[2] << std::endl;
+			std::cout << ret << " " << tmp << std::endl;
 		//}
 		usleep(100000);
 	}
