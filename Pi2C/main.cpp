@@ -10,16 +10,17 @@ int main(){
 	Pi2c* interface = new Pi2c(0x15);
 	
 	char tmp[3];
-	/*
-	int ret = interface->i2cRead(tmp, 3);
-	
-	//if(ret != -1 && tmp[0] != 0){
+	while(1){
+		int ret = interface->i2cRead(tmp, 10);
 		
-		std::cout << ret << " " << int(tmp[0]) << (int)tmp[1] << (int)tmp[2] << std::endl;
-	//}
-	usleep(100000);
+		//if(ret != -1 && tmp[0] != 0){
+			
+			std::cout << ret << " " << int(tmp[0]) << (int)tmp[1] << (int)tmp[2] << std::endl;
+		//}
+		usleep(100000);
+	}
 	sleep(5);
-	*/
+	
 	
 	sleep(1);
 	
