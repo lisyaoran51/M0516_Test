@@ -17,7 +17,7 @@ int main(){
 			
 			std::cout << ret << " " << (int)tmp[0] << " " << tmp << std::endl;
 		//}
-		usleep(100000);
+		//usleep(100000);
 	}
 	sleep(5);
 	
