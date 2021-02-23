@@ -10,7 +10,7 @@ int main(){
 	Pi2c* interface = new Pi2c(0x15);
 	
 	char tmp[11];
-	while(1){
+	while(0){
 		int ret = interface->i2cRead(tmp, 10);
 		tmp[10] = '\0';
 		//if(ret != -1 && tmp[0] != 0){
