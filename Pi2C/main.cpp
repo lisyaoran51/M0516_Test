@@ -11,7 +11,7 @@ int main(){
 	
 	char tmp[11];
 	while(1){
-		int ret = interface->i2cRead(tmp, 10);
+		int ret = interface->i2cRead(tmp, 20);
 		tmp[10] = '\0';
 		//if(ret != -1 && tmp[0] != 0){
 			
