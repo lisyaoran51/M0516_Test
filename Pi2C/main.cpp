@@ -10,11 +10,8 @@
 
 int main(){
 	auto time = std::chrono::system_clock::now();
-    // Some computation here
+	auto end = std::chrono::system_clock::now();
 
-    std::time_t end_time = std::chrono::system_clock::to_time_t(time);
-
-	
 	Pi2c* interface = new Pi2c(0x15);
 	
 	char tmp[11];
@@ -22,9 +19,8 @@ int main(){
 		int ret = interface->i2cRead(tmp, 16);
 		tmp[10] = '\0';
 		//if(ret != -1 && tmp[0] != 0){
-			time = std::chrono::system_clock::now();
-			end_time = std::chrono::system_clock::to_time_t(time);
-			std::cout << ret << " " << (int)tmp[0] << " " << tmp << std::ctime(&end_time) << std::endl;
+			std::chrono::duration<double> elapsed_seconds = end-time;
+			std::cout << ret << " " << (int)tmp[0] << " " << tmp << " " << elapsed_seconds.count() << std::endl;
 		//}
 		//usleep(100000);
 	}
