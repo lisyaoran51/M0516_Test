@@ -1,11 +1,19 @@
 #include "pi2c.h"       
 #include <unistd.h>
 #include <string>
+#include <chrono>
+#include <ctime>    
+
 
 // g++ main.cpp -o main pi2c.cpp
 // sudo modprobe i2c-dev
 
 int main(){
+	auto time = std::chrono::system_clock::now();
+    // Some computation here
+
+    std::time_t end_time = std::chrono::system_clock::to_time_t(time);
+
 	
 	Pi2c* interface = new Pi2c(0x15);
 	
@@ -14,8 +22,9 @@ int main(){
 		int ret = interface->i2cRead(tmp, 16);
 		tmp[10] = '\0';
 		//if(ret != -1 && tmp[0] != 0){
-			
-			std::cout << ret << " " << (int)tmp[0] << " " << tmp << std::endl;
+			time = std::chrono::system_clock::now();
+			end_time = std::chrono::system_clock::to_time_t(time);
+			std::cout << ret << " " << (int)tmp[0] << " " << tmp << std::ctime(&end_time) << std::endl;
 		//}
 		//usleep(100000);
 	}
