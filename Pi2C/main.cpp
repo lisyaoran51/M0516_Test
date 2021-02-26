@@ -18,12 +18,13 @@ int main(){
 	while(1){
 		int ret = interface->i2cRead(tmp, 16);
 		tmp[10] = '\0';
-		if(ret != -1 && tmp[0] != 0x0){
+		//if(ret != -1 && tmp[0] != 0x0){
 			auto end = std::chrono::system_clock::now();
 			std::chrono::duration<double> elapsed_seconds = end-time;
 			std::cout << ret << " " << (int)tmp[0] << " " << tmp << " " << elapsed_seconds.count() << std::endl;
-		}
+		//}
 		//usleep(100000);
+		usleep(1000);
 	}
 	sleep(5);
 	
