@@ -1,0 +1,48 @@
+<html>
+<body>
+<pre>
+<h1>猩ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.31.0.0
+Copyright (C) 2020 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Jiayu Tsai, UltraGBye, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.31.0.0
+Toolchain Path:  c:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 6 (build 750)
+Assembler:       Armasm.exe V5.06 update 6 (build 750)
+Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
+Library Manager: ArmAr.exe V5.06 update 6 (build 750)
+Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
+CPU DLL:         SARMCM3.DLL V5.31.0.0
+Dialog DLL:      DARMCM1.DLL V1.19.3.0
+Target DLL:      NULink\Nu_Link.dll V3.03
+Dialog DLL:      TARMCM1.DLL V1.14.2.0
+ 
+<h2>Project:</h2>
+C:\Users\lisya\Desktop\蔡佳昱\其他程式\M0516_Test\TIMER_PowerDown\KEIL\TIMER_PowerDown.uvproj
+Project File Date:  02/24/2021
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'c:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'TIMER_PowerDown'
+assembling startup_M051Series.s...
+creating preprocessor file for system_M051Series.c...
+creating preprocessor file for main.c...
+compiling system_M051Series.c...
+creating preprocessor file for retarget.c...
+compiling main.c...
+..\main.c(263): warning:  #111-D: statement is unreachable
+      u32InitCount = g_u8IsTMR0WakeupFlag = g_au32TMRINTCount[0] = 0;
+..\main.c: 1 warning, 0 errors
+compiling retarget.c...
+linking...
+Program Size: Code=2648 RO-data=424 RW-data=28 ZI-data=548  
+After Build - User command #1: fromelf --bin ".\obj\TIMER_PowerDown.axf" --output ".\obj\TIMER_PowerDown.bin"
+After Build - User command #2: fromelf --text -c ".\obj\TIMER_PowerDown.axf" --output ".\obj\TIMER_PowerDown.txt"
+".\obj\TIMER_PowerDown.axf" - 0 Error(s), 1 Warning(s).
+Build Time Elapsed:  00:00:05
+</pre>
+</body>
+</html>

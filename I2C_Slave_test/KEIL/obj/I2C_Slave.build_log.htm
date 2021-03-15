@@ -1,0 +1,64 @@
+<html>
+<body>
+<pre>
+<h1>猩ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.31.0.0
+Copyright (C) 2020 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Jiayu Tsai, UltraGBye, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.31.0.0
+Toolchain Path:  c:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 6 (build 750)
+Assembler:       Armasm.exe V5.06 update 6 (build 750)
+Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
+Library Manager: ArmAr.exe V5.06 update 6 (build 750)
+Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
+CPU DLL:         SARMCM3.DLL V5.31.0.0
+Dialog DLL:      DARMCM1.DLL V1.19.3.0
+Target DLL:      NULink\Nu_Link.dll V3.03
+Dialog DLL:      TARMCM1.DLL V1.14.2.0
+ 
+<h2>Project:</h2>
+C:\Users\lisya\Desktop\蔡佳昱\其他程式\M0516_Test\I2C_Slave_test\KEIL\I2C_Slave.uvproj
+Project File Date:  02/09/2021
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'c:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'I2C_Slave'
+assembling startup_M051Series.s...
+creating preprocessor file for system_M051Series.c...
+creating preprocessor file for main.c...
+compiling system_M051Series.c...
+creating preprocessor file for retarget.c...
+compiling main.c...
+..\main.c(75): warning:  #177-D: variable "i"  was declared but never referenced
+  		uint32_t i;
+..\main.c(351): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcpy(i2cWriteData[0], "aaaaaaa\0");
+..\main.c(352): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcpy(i2cWriteData[1], "bbbbb\0");
+..\main.c(353): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcpy(i2cWriteData[2], "ccccccccc\0");
+..\main.c(354): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcpy(i2cWriteData[3], "ddddddddddd\0");
+..\main.c(355): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcpy(i2cWriteData[4], "eeee\0");
+..\main.c(356): warning:  #167-D: argument of type "uint8_t *" is incompatible with parameter of type "char *restrict"
+  		strcpy(i2cWriteData[5], "ff\0");
+..\main.c(382): warning:  #111-D: statement is unreachable
+  			printf("%d - ", g_u8SlvDataLen);
+..\main.c(380): warning:  #128-D: loop is not reachable
+      while(1){
+..\main.c: 9 warnings, 0 errors
+compiling retarget.c...
+linking...
+Program Size: Code=3064 RO-data=224 RW-data=32 ZI-data=1584  
+After Build - User command #1: fromelf --bin ".\obj\I2C_Slave.axf" --output ".\obj\I2C_Slave.bin"
+After Build - User command #2: fromelf --text -c ".\obj\I2C_Slave.axf" --output ".\obj\I2C_Slave.txt"
+".\obj\I2C_Slave.axf" - 0 Error(s), 9 Warning(s).
+Build Time Elapsed:  00:00:11
+</pre>
+</body>
+</html>

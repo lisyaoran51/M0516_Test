@@ -1,0 +1,50 @@
+<html>
+<body>
+<pre>
+<h1>猩ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.31.0.0
+Copyright (C) 2020 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Jiayu Tsai, UltraGBye, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.31.0.0
+Toolchain Path:  c:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 6 (build 750)
+Assembler:       Armasm.exe V5.06 update 6 (build 750)
+Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
+Library Manager: ArmAr.exe V5.06 update 6 (build 750)
+Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
+CPU DLL:         SARMCM3.DLL V5.31.0.0
+Dialog DLL:      DARMCM1.DLL V1.19.3.0
+Target DLL:      NULink\Nu_Link.dll V3.03
+Dialog DLL:      TARMCM1.DLL V1.14.2.0
+ 
+<h2>Project:</h2>
+C:\Users\lisya\Desktop\蔡佳昱\其他程式\M0516_Test\ReadKeyboard\KEIL\GPIO_OutputInput.uvproj
+Project File Date:  02/01/2021
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'c:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'GPIO_OutputInput'
+assembling startup_M051Series.s...
+creating preprocessor file for system_M051Series.c...
+creating preprocessor file for main.c...
+compiling system_M051Series.c...
+creating preprocessor file for retarget.c...
+compiling main.c...
+..\main.c(199): warning:  #177-D: variable "i"  was declared but never referenced
+  		uint32_t i;
+..\main.c(367): warning:  #177-D: variable "i32Err"  was declared but never referenced
+      int32_t i32Err;
+..\main.c: 2 warnings, 0 errors
+compiling retarget.c...
+linking...
+Program Size: Code=4028 RO-data=224 RW-data=36 ZI-data=1076  
+After Build - User command #1: fromelf --bin ".\obj\GPIO_OutputInput.axf" --output ".\obj\GPIO_OutputInput.bin"
+After Build - User command #2: fromelf --text -c ".\obj\GPIO_OutputInput.axf" --output ".\obj\GPIO_OutputInput.txt"
+".\obj\GPIO_OutputInput.axf" - 0 Error(s), 2 Warning(s).
+Build Time Elapsed:  00:00:11
+</pre>
+</body>
+</html>

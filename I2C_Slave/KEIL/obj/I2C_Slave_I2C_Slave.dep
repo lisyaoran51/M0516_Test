@@ -1,0 +1,72 @@
+Dependencies for Project 'I2C_Slave', Target 'I2C_Slave': (DO NOT MODIFY !)
+CompilerVersion: 5060750::V5.06 update 6 (build 750)::.\ARMCC
+F (..\..\Library\Device\Nuvoton\M051Series\Source\system_M051Series.c)(0x5C989FE9)(-c --cpu Cortex-M0 -D__EVAL -D__MICROLIB -g -O2 --apcs=interwork --split_sections -I ..\..\Library\CMSIS\Include -I ..\..\Library\Device\Nuvoton\M051Series\Include -I ..\..\Library\StdDriver\inc -I ..\..\Library\M051-LB_004\inc-Ic:\Keil_v5\ARM\RV31\INC-Ic:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="531" -DDEBUG_ENABLE_SEMIHOST-o .\obj\system_m051series.o --omf_browse .\obj\system_m051series.crf --depend .\obj\system_m051series.d)
+I (c:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x5EC775FC)
+I (c:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC775FC)
+I (..\..\Library\Device\Nuvoton\M051Series\Include\M051Series.h)(0x5C989FE9)
+I (..\..\Library\CMSIS\Include\core_cm0.h)(0x5C989FE9)
+I (..\..\Library\CMSIS\Include\core_cmInstr.h)(0x5C989FE9)
+I (..\..\Library\CMSIS\Include\core_cmFunc.h)(0x5C989FE9)
+I (..\..\Library\Device\Nuvoton\M051Series\Include\system_M051Series.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\sys.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\clk.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\adc.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\ebi.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\fmc.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\gpio.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\i2c.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\pwm.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\spi.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\timer.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\wdt.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\wwdt.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\uart.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\hdiv.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\acmp.h)(0x5C989FE9)
+F (..\..\Library\Device\Nuvoton\M051Series\Source\ARM\startup_M051Series.s)(0x5C989FE9)(--cpu Cortex-M0 --pd "__EVAL SETA 1" -g --16 --apcs=interwork --pd "__MICROLIB SETA 1"-Ic:\Keil_v5\ARM\RV31\INC-Ic:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 531"--list .\lst\startup_m051series.lst --xref -o .\obj\startup_m051series.o --depend .\obj\startup_m051series.d)
+F (..\main.c)(0x6022154C)(-c --cpu Cortex-M0 -D__EVAL -D__MICROLIB -g -O2 --apcs=interwork --split_sections -I ..\..\Library\CMSIS\Include -I ..\..\Library\Device\Nuvoton\M051Series\Include -I ..\..\Library\StdDriver\inc -I ..\..\Library\M051-LB_004\inc-Ic:\Keil_v5\ARM\RV31\INC-Ic:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="531" -DDEBUG_ENABLE_SEMIHOST-o .\obj\main.o --omf_browse .\obj\main.crf --depend .\obj\main.d)
+I (c:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x5EC775FC)
+I (..\..\Library\Device\Nuvoton\M051Series\Include\M051Series.h)(0x5C989FE9)
+I (..\..\Library\CMSIS\Include\core_cm0.h)(0x5C989FE9)
+I (c:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC775FC)
+I (..\..\Library\CMSIS\Include\core_cmInstr.h)(0x5C989FE9)
+I (..\..\Library\CMSIS\Include\core_cmFunc.h)(0x5C989FE9)
+I (..\..\Library\Device\Nuvoton\M051Series\Include\system_M051Series.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\sys.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\clk.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\adc.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\ebi.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\fmc.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\gpio.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\i2c.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\pwm.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\spi.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\timer.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\wdt.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\wwdt.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\uart.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\hdiv.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\acmp.h)(0x5C989FE9)
+F (..\..\Library\StdDriver\src\retarget.c)(0x5C989FE9)(-c --cpu Cortex-M0 -D__EVAL -D__MICROLIB -g -O2 --apcs=interwork --split_sections -I ..\..\Library\CMSIS\Include -I ..\..\Library\Device\Nuvoton\M051Series\Include -I ..\..\Library\StdDriver\inc -I ..\..\Library\M051-LB_004\inc-Ic:\Keil_v5\ARM\RV31\INC-Ic:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="531" -DDEBUG_ENABLE_SEMIHOST-o .\obj\retarget.o --omf_browse .\obj\retarget.crf --depend .\obj\retarget.d)
+I (c:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x5EC775FC)
+I (..\..\Library\Device\Nuvoton\M051Series\Include\M051Series.h)(0x5C989FE9)
+I (..\..\Library\CMSIS\Include\core_cm0.h)(0x5C989FE9)
+I (c:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x5EC775FC)
+I (..\..\Library\CMSIS\Include\core_cmInstr.h)(0x5C989FE9)
+I (..\..\Library\CMSIS\Include\core_cmFunc.h)(0x5C989FE9)
+I (..\..\Library\Device\Nuvoton\M051Series\Include\system_M051Series.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\sys.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\clk.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\adc.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\ebi.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\fmc.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\gpio.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\i2c.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\pwm.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\spi.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\timer.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\wdt.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\wwdt.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\uart.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\hdiv.h)(0x5C989FE9)
+I (..\..\Library\StdDriver\inc\acmp.h)(0x5C989FE9)

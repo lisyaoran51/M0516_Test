@@ -1,0 +1,90 @@
+<html>
+<body>
+<pre>
+<h1>猩ision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: μVision V5.31.0.0
+Copyright (C) 2020 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Jiayu Tsai, UltraGBye, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.31.0.0
+Toolchain Path:  c:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 6 (build 750)
+Assembler:       Armasm.exe V5.06 update 6 (build 750)
+Linker/Locator:  ArmLink.exe V5.06 update 6 (build 750)
+Library Manager: ArmAr.exe V5.06 update 6 (build 750)
+Hex Converter:   FromElf.exe V5.06 update 6 (build 750)
+CPU DLL:         SARMCM3.DLL V5.31.0.0
+Dialog DLL:      DARMCM1.DLL V1.19.3.0
+Target DLL:      NULink\Nu_Link.dll V3.03
+Dialog DLL:      TARMCM1.DLL V1.14.2.0
+ 
+<h2>Project:</h2>
+C:\Users\lisya\Desktop\蔡佳昱\其他程式\M0516_Test\MeteoMcu\KEIL\I2C_Slave.uvproj
+Project File Date:  09/07/2020
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 6 (build 750)', folder: 'c:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'I2C_Slave'
+assembling startup_M051Series.s...
+creating preprocessor file for system_M051Series.c...
+creating preprocessor file for I2cInterface.c...
+compiling system_M051Series.c...
+creating preprocessor file for CircularLinkedList.c...
+compiling I2cInterface.c...
+..\CircularLinkedList.h(25): warning:  #1295-D: Deprecated declaration CircularLinkedList_CreateElement - give arg types
+  struct CircularLinkedListElement* CircularLinkedList_CreateElement();
+..\CircularLinkedList.h(39): warning:  #1295-D: Deprecated declaration CircularLinkedList_Create - give arg types
+  struct CircularLinkedList* CircularLinkedList_Create();
+..\CircularLinkedList.h(70): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\I2cInterface.h(18): warning:  #1295-D: Deprecated declaration I2cInterface_ErrorCode - give arg types
+  short I2cInterface_ErrorCode();
+..\I2cInterface.h(24): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\I2cInterface.c: 5 warnings, 0 errors
+creating preprocessor file for main.c...
+compiling CircularLinkedList.c...
+..\CircularLinkedList.h(25): warning:  #1295-D: Deprecated declaration CircularLinkedList_CreateElement - give arg types
+  struct CircularLinkedListElement* CircularLinkedList_CreateElement();
+..\CircularLinkedList.h(39): warning:  #1295-D: Deprecated declaration CircularLinkedList_Create - give arg types
+  struct CircularLinkedList* CircularLinkedList_Create();
+..\CircularLinkedList.h(70): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\CircularLinkedList.c(76): warning:  #167-D: argument of type "volatile struct CircularLinkedListElement *" is incompatible with parameter of type "struct CircularLinkedListElement *"
+  	CircularLinkedListElement_SetContent(list->tail, buffer, size);
+..\CircularLinkedList.c: 4 warnings, 0 errors
+creating preprocessor file for retarget.c...
+compiling main.c...
+..\CircularLinkedList.h(25): warning:  #1295-D: Deprecated declaration CircularLinkedList_CreateElement - give arg types
+  struct CircularLinkedListElement* CircularLinkedList_CreateElement();
+..\CircularLinkedList.h(39): warning:  #1295-D: Deprecated declaration CircularLinkedList_Create - give arg types
+  struct CircularLinkedList* CircularLinkedList_Create();
+..\CircularLinkedList.h(70): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\I2cInterface.h(18): warning:  #1295-D: Deprecated declaration I2cInterface_ErrorCode - give arg types
+  short I2cInterface_ErrorCode();
+..\I2cInterface.h(24): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\main.c(80): warning:  #177-D: variable "first"  was declared but never referenced
+  		char first[16];
+..\main.c: 6 warnings, 0 errors
+creating preprocessor file for clk.c...
+compiling retarget.c...
+creating preprocessor file for i2c.c...
+compiling clk.c...
+creating preprocessor file for sys.c...
+compiling i2c.c...
+creating preprocessor file for uart.c...
+compiling sys.c...
+compiling uart.c...
+linking...
+Program Size: Code=5284 RO-data=304 RW-data=52 ZI-data=596  
+After Build - User command #1: fromelf --bin ".\obj\I2C_Slave.axf" --output ".\obj\I2C_Slave.bin"
+After Build - User command #2: fromelf --text -c ".\obj\I2C_Slave.axf" --output ".\obj\I2C_Slave.txt"
+".\obj\I2C_Slave.axf" - 0 Error(s), 15 Warning(s).
+Build Time Elapsed:  00:00:11
+</pre>
+</body>
+</html>
