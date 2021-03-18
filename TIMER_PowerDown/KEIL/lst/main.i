@@ -12514,7 +12514,7 @@ int main(void)
 		((GPIO_T *) (((( uint32_t)0x50000000) + 0x4000) + 0x00C0))->PMD = (((GPIO_T *) (((( uint32_t)0x50000000) + 0x4000) + 0x00C0))->PMD & (~(0x3ul << 14))) | (0x1UL << 14);
 		
 		while(1){
-			if(toggle == 1){
+			if(toggle == 2){
 				for(i = 0; i < 16; i++){
 					if(i & 0x8)
 						SetPin(3, 7, 1);

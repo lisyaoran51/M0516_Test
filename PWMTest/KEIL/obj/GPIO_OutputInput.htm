@@ -3,9 +3,9 @@
 <title>Static Call Graph - [.\obj\GPIO_OutputInput.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\obj\GPIO_OutputInput.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Mon Mar 15 07:27:49 2021
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060750: Last Updated: Fri Mar 19 06:20:17 2021
 <BR><P>
-<H3>Maximum Stack Usage =         40 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
+<H3>Maximum Stack Usage =         56 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
 main &rArr; setPwm &rArr; __2printf
 <P>
@@ -245,7 +245,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PWMA_IRQHandler
 </UL>
 
-<P><STRONG><a name="[32]"></a>SYS_Init</STRONG> (Thumb, 154 bytes, Stack size 0 bytes, main.o(i.SYS_Init))
+<P><STRONG><a name="[32]"></a>SYS_Init</STRONG> (Thumb, 162 bytes, Stack size 0 bytes, main.o(i.SYS_Init))
 <BR><BR>[Called By]<UL><LI><a href="#[1e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
@@ -292,8 +292,8 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> printf5.o(i.__0printf$5)
 </UL>
-<P><STRONG><a name="[1e]"></a>main</STRONG> (Thumb, 142 bytes, Stack size 0 bytes, main.o(i.main))
-<BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = main &rArr; setPwm &rArr; __2printf
+<P><STRONG><a name="[1e]"></a>main</STRONG> (Thumb, 300 bytes, Stack size 8 bytes, main.o(i.main))
+<BR><BR>[Stack]<UL><LI>Max Depth = 56<LI>Call Chain = main &rArr; setPwm &rArr; __2printf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[34]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;setPwm
 <LI><a href="#[33]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART0_Init
@@ -302,8 +302,8 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> entry9a.o(.ARM.Collect$$$$0000000B)
 </UL>
-<P><STRONG><a name="[34]"></a>setPwm</STRONG> (Thumb, 222 bytes, Stack size 16 bytes, main.o(i.setPwm))
-<BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = setPwm &rArr; __2printf
+<P><STRONG><a name="[34]"></a>setPwm</STRONG> (Thumb, 494 bytes, Stack size 24 bytes, main.o(i.setPwm))
+<BR><BR>[Stack]<UL><LI>Max Depth = 48<LI>Call Chain = setPwm &rArr; __2printf
 </UL>
 <BR>[Calls]<UL><LI><a href="#[2a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>

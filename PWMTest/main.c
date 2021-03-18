@@ -127,14 +127,18 @@ void SYS_Init(void)
     CLK->CLKSEL0 = CLK_CLKSEL0_STCLK_S_HCLK_DIV2 | CLK_CLKSEL0_HCLK_S_PLL;
 
     /* Enable IP clock */
-    CLK->APBCLK = CLK_APBCLK_UART0_EN_Msk | CLK_APBCLK_PWM01_EN_Msk | CLK_APBCLK_PWM23_EN_Msk;
+    CLK->APBCLK = CLK_APBCLK_UART0_EN_Msk | CLK_APBCLK_PWM01_EN_Msk | CLK_APBCLK_PWM23_EN_Msk | CLK_APBCLK_PWM45_EN_Msk | CLK_APBCLK_PWM67_EN_Msk;
     /* IP clock source */
     CLK->CLKSEL1 = CLK_CLKSEL1_UART_S_PLL;
     /* IP clock source */
     CLK->CLKSEL1 = CLK_CLKSEL1_PWM01_S_HXT | CLK_CLKSEL1_PWM23_S_HXT;
+		CLK->CLKSEL2 = CLK_CLKSEL2_PWM45_S_HXT | CLK_CLKSEL2_PWM67_S_HXT;
 
     /* Reset PWMA channel0~channel3 */
     SYS->IPRSTC2 = SYS_IPRSTC2_PWM03_RST_Msk;
+    SYS->IPRSTC2 = 0;
+		
+		SYS->IPRSTC2 = SYS_IPRSTC2_PWM47_RST_Msk;
     SYS->IPRSTC2 = 0;
 
     /* Update System Core Clock */
@@ -173,17 +177,37 @@ void UART0_Init(void)
 void setPwm(){
 	
 		printf("setPWM\n");
+	
+		P2->PMD = (P2->PMD & (~GPIO_PMD_PMD0_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD0_Pos);
+    P2->PMD = (P2->PMD & (~GPIO_PMD_PMD1_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD1_Pos);
+    P2->PMD = (P2->PMD & (~GPIO_PMD_PMD2_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD2_Pos);
+    P2->PMD = (P2->PMD & (~GPIO_PMD_PMD3_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD3_Pos);
+    P2->PMD = (P2->PMD & (~GPIO_PMD_PMD4_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD4_Pos);
+    P2->PMD = (P2->PMD & (~GPIO_PMD_PMD5_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD5_Pos);
+    P2->PMD = (P2->PMD & (~GPIO_PMD_PMD6_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD6_Pos);
+    P2->PMD = (P2->PMD & (~GPIO_PMD_PMD7_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD7_Pos);
+	
 		/*Set Pwm mode*/
 		PWMA->PCR |= PWM_PCR_CH0MOD_Msk;
 		PWMA->PCR |= PWM_PCR_CH1MOD_Msk;
 		PWMA->PCR |= PWM_PCR_CH2MOD_Msk;
 		PWMA->PCR |= PWM_PCR_CH3MOD_Msk;
+	
+		PWMB->PCR |= PWM_PCR_CH0MOD_Msk;
+		PWMB->PCR |= PWM_PCR_CH1MOD_Msk;
+		PWMB->PCR |= PWM_PCR_CH2MOD_Msk;
+		PWMB->PCR |= PWM_PCR_CH3MOD_Msk;
 
 		/*Set PWM Timer clock prescaler*/
-		PWM_SET_PRESCALER(PWMA, PWM_CH0, 0); // Divided by 2
-		PWM_SET_PRESCALER(PWMA, PWM_CH1, 1); // Divided by 2
-		PWM_SET_PRESCALER(PWMA, PWM_CH2, 2); // Divided by 2
-		PWM_SET_PRESCALER(PWMA, PWM_CH3, 3); // Divided by 2
+		PWM_SET_PRESCALER(PWMA, PWM_CH0, 0x01); // Divided by 2
+		PWM_SET_PRESCALER(PWMA, PWM_CH1, 0x01); // Divided by 2
+		PWM_SET_PRESCALER(PWMA, PWM_CH2, 0x01); // Divided by 2
+		PWM_SET_PRESCALER(PWMA, PWM_CH3, 0x01); // Divided by 2
+	
+		PWM_SET_PRESCALER(PWMB, PWM_CH0, 0x02); // Divided by 2
+		PWM_SET_PRESCALER(PWMB, PWM_CH1, 0x02); // Divided by 2
+		PWM_SET_PRESCALER(PWMB, PWM_CH2, 0x02); // Divided by 2
+		PWM_SET_PRESCALER(PWMB, PWM_CH3, 0x02); // Divided by 2
 	
 	
 		/*Set PWM Timer clock divider select*/
@@ -192,12 +216,22 @@ void setPwm(){
 		PWM_SET_DIVIDER(PWMA, PWM_CH2, PWM_CLK_DIV_16);
 		PWM_SET_DIVIDER(PWMA, PWM_CH3, PWM_CLK_DIV_16);
 
+		PWM_SET_DIVIDER(PWMB, PWM_CH0, PWM_CLK_DIV_16);
+		PWM_SET_DIVIDER(PWMB, PWM_CH1, PWM_CLK_DIV_16);
+		PWM_SET_DIVIDER(PWMB, PWM_CH2, PWM_CLK_DIV_16);
+		PWM_SET_DIVIDER(PWMB, PWM_CH3, PWM_CLK_DIV_16);
+		
 		/*Set PWM Timer duty*/
 		//PWMA->CMR0 = g_au16ScaleCmr[(u8Item - '1')];
-		PWMA->CMR0 = 0x200;
-		PWMA->CMR1 = 0x100;
-		PWMA->CMR2 = 0x10;
-		PWMA->CMR3 = 0x00;
+		PWMA->CMR0 = 0x100;
+		PWMA->CMR1 = 0x200;
+		PWMA->CMR2 = 0x400;
+		PWMA->CMR3 = 0x800;
+		
+		PWMB->CMR0 = 0x100;
+		PWMB->CMR1 = 0x200;
+		PWMB->CMR2 = 0x400;
+		PWMB->CMR3 = 0x800;
 	
 		/*Set PWM Timer period*/
 		//PWMA->CNR0 = g_au16ScaleCnr[(u8Item - '1')];
@@ -205,12 +239,22 @@ void setPwm(){
 		PWMA->CNR1 = 0x1000;
 		PWMA->CNR2 = 0x1000;
 		PWMA->CNR3 = 0x1000;
+		
+		PWMB->CNR0 = 0x1000;
+		PWMB->CNR1 = 0x1000;
+		PWMB->CNR2 = 0x1000;
+		PWMB->CNR3 = 0x1000;
 
 		/* Enable PWM Output pin */
 		PWMA->POE |= PWM_POE_PWM0_Msk;
 		PWMA->POE |= PWM_POE_PWM1_Msk;
 		PWMA->POE |= PWM_POE_PWM2_Msk;
 		PWMA->POE |= PWM_POE_PWM3_Msk;
+		
+		PWMB->POE |= PWM_POE_PWM0_Msk;
+		PWMB->POE |= PWM_POE_PWM1_Msk;
+		PWMB->POE |= PWM_POE_PWM2_Msk;
+		PWMB->POE |= PWM_POE_PWM3_Msk;
 
 		/* Enable Timer period Interrupt */
 		//PWMA->PIER |= PWM_PIER_PWMIE0_Msk;
@@ -226,6 +270,11 @@ void setPwm(){
 		PWMA->PCR |= PWM_PCR_CH1EN_Msk;
 		PWMA->PCR |= PWM_PCR_CH2EN_Msk;
 		PWMA->PCR |= PWM_PCR_CH3EN_Msk;
+		
+		PWMB->PCR |= PWM_PCR_CH0EN_Msk;
+		PWMB->PCR |= PWM_PCR_CH1EN_Msk;
+		PWMB->PCR |= PWM_PCR_CH2EN_Msk;
+		PWMB->PCR |= PWM_PCR_CH3EN_Msk;
 
 		//while(g_u8PWMCount);
 
@@ -256,6 +305,7 @@ void setPwm(){
 int32_t main(void)
 {
     uint8_t u8Item, u8ItemOK;
+		uint32_t u32Src;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -288,10 +338,41 @@ int32_t main(void)
     printf(" 6: La (880Hz)\n");
     printf(" 7: Si (988Hz)\n");
 
+		u32Src = (CLK->CLKSEL2 & (CLK_CLKSEL2_PWM45_S_Msk << (PWM_CH0 & 2))) >> (CLK_CLKSEL2_PWM45_S_Pos + (PWM_CH0 & 2));
+		
+		
+    printf("clock source %d\n", u32Src);
+		
+		
 		setPwm();
 		
+		printf("CNR: %d %d %d %d \n", PWMB->CNR0, PWMB->CNR1, PWMB->CNR2, PWMB->CNR3);
+
+		
 		printf("swePwm done\n");
-		while(1);
+		while(1){
+			
+			PWMA->CMR0++;
+			PWMA->CMR1++;
+			PWMA->CMR2++;
+			PWMA->CMR3++;
+			
+			PWMB->CMR0++;
+			PWMB->CMR1++;
+			PWMB->CMR2++;
+			PWMB->CMR3++;
+			if(PWMA->CMR0 == 0x1000) PWMA->CMR0 = 0x0;
+			if(PWMA->CMR1 == 0x1000) PWMA->CMR1 = 0x0;
+			if(PWMA->CMR2 == 0x1000) PWMA->CMR2 = 0x0;
+			if(PWMA->CMR3 == 0x1000) PWMA->CMR3 = 0x0;
+			if(PWMB->CMR0 == 0x1000) PWMB->CMR0 = 0x0;
+			if(PWMB->CMR1 == 0x1000) PWMB->CMR1 = 0x0;
+			if(PWMB->CMR2 == 0x1000) PWMB->CMR2 = 0x0;
+			if(PWMB->CMR3 == 0x1000) PWMB->CMR3 = 0x0;
+			
+			printf(" ");
+			
+		}
 
 		printf("xxx\n");
 

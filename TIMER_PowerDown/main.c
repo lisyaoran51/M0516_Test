@@ -211,7 +211,7 @@ int main(void)
 		P3->PMD = (P3->PMD & (~GPIO_PMD_PMD7_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD7_Pos);
 		
 		while(1){
-			if(toggle == 1){
+			if(toggle == 2){
 				for(i = 0; i < 16; i++){
 					if(i & 0x8)
 						SetPin(3, 7, 1);
