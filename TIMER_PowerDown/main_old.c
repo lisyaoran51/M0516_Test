@@ -62,8 +62,7 @@ void TMR0_IRQHandler(void)
         TIMER_ClearIntFlag(TIMER0);
 
         g_au32TMRINTCount[0]++;
-				//toggle = 1;
-				//printf("timer! %d\n", g_au32TMRINTCount[0]);
+				toggle = 1;
     }
 
     if(TIMER_GetWakeupFlag(TIMER0) == 1)
@@ -188,7 +187,6 @@ int main(void)
     //TIMER0->TCMPR = __LIRC;
 		//TIMER0->TCMPR = (22118400/1080); // 1080hz
 		TIMER0->TCMPR = __LIRC / 1000UL;
-		TIMER0->TCMPR = __LIRC / 1000UL;
 		TIMER0->TCSR = TIMER_TOGGLE_MODE | TIMER_TCSR_IE_Msk | TIMER_TCSR_WAKE_EN_Msk;
 		TIMER0->TCSR = TIMER_TCSR_IE_Msk | TIMER_PERIODIC_MODE;
 
@@ -213,7 +211,7 @@ int main(void)
 		P3->PMD = (P3->PMD & (~GPIO_PMD_PMD7_Msk)) | (GPIO_PMD_OUTPUT << GPIO_PMD_PMD7_Pos);
 		
 		while(1){
-			if(toggle == 0){
+			if(toggle == 2){
 				for(i = 0; i < 16; i++){
 					if(i & 0x8)
 						SetPin(3, 7, 1);
@@ -238,14 +236,14 @@ int main(void)
 					for(j = 0; j < 8; j++){
 						
 						if(GetPin(0, j) == 0)
-							printf("read input %d %d at %ds\n", i, j, g_au32TMRINTCount[0]);
+							printf("read input %d %d \n", i, j);
 							//count++;
 					}
 				}
 				count++;
-				//toggle = 0;
+				toggle = 0;
 			}			
-			if(g_au32TMRINTCount[0] / 1000 != u32InitCount)
+			if(g_au32TMRINTCount[0] != u32InitCount)
 			{		
 					//printf("Timer0 interrupt count - %d\n", g_au32TMRINTCount[0]);
 					if(g_au32TMRINTCount[0] / 1000 > g_au32TMRINTCount[1]){
@@ -256,7 +254,7 @@ int main(void)
 						g_au32TMRINTCount[1] = g_au32TMRINTCount[0] / 1000;
 					}
 				
-					u32InitCount = g_au32TMRINTCount[0] / 1000;
+					u32InitCount = g_au32TMRINTCount[0];
 			}
 		}
 		

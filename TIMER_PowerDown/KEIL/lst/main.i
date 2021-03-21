@@ -12365,7 +12365,8 @@ void TMR0_IRQHandler(void)
         TIMER_ClearIntFlag(((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000)));
 
         g_au32TMRINTCount[0]++;
-				toggle = 1;
+				
+				
     }
 
     if(TIMER_GetWakeupFlag(((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))) == 1)
@@ -12490,6 +12491,7 @@ int main(void)
     
 		
 		((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))->TCMPR = (10000UL) / 1000UL;
+		((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))->TCMPR = (10000UL) / 1000UL;
 		((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))->TCSR = (2UL << 27) | (1ul << 29) | (1ul << 23);
 		((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))->TCSR = (1ul << 29) | (1UL << 27);
 
@@ -12514,7 +12516,7 @@ int main(void)
 		((GPIO_T *) (((( uint32_t)0x50000000) + 0x4000) + 0x00C0))->PMD = (((GPIO_T *) (((( uint32_t)0x50000000) + 0x4000) + 0x00C0))->PMD & (~(0x3ul << 14))) | (0x1UL << 14);
 		
 		while(1){
-			if(toggle == 2){
+			if(toggle == 0){
 				for(i = 0; i < 16; i++){
 					if(i & 0x8)
 						SetPin(3, 7, 1);
@@ -12539,14 +12541,14 @@ int main(void)
 					for(j = 0; j < 8; j++){
 						
 						if(GetPin(0, j) == 0)
-							printf("read input %d %d \n", i, j);
+							printf("read input %d %d at %ds\n", i, j, g_au32TMRINTCount[0]);
 							
 					}
 				}
 				count++;
-				toggle = 0;
+				
 			}			
-			if(g_au32TMRINTCount[0] != u32InitCount)
+			if(g_au32TMRINTCount[0] / 1000 != u32InitCount)
 			{		
 					
 					if(g_au32TMRINTCount[0] / 1000 > g_au32TMRINTCount[1]){
@@ -12557,7 +12559,7 @@ int main(void)
 						g_au32TMRINTCount[1] = g_au32TMRINTCount[0] / 1000;
 					}
 				
-					u32InitCount = g_au32TMRINTCount[0];
+					u32InitCount = g_au32TMRINTCount[0] / 1000;
 			}
 		}
 		

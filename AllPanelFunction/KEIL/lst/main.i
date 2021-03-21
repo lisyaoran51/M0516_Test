@@ -14232,6 +14232,43 @@ __declspec(__nothrow) long double rintl(long double );
 
 
 
+ 
+ 
+ 
+
+		
+
+ 
+		uint32_t pressedKeyTime[48] = {0};
+		
+		
+
+
+
+
+ 
+		uint8_t pressedKey[48] = {0};		
+		
+		uint8_t powerButton = 0;
+		uint8_t sensitiveButton = 0;
+		uint8_t sustainButton = 0;
+		uint8_t lowerOctaceButton = 0;
+		uint8_t raiseOctaceButton = 0;
+		uint8_t pauseButton = 0;
+		uint8_t speedButton = 0;
+		
+		uint8_t pedalpluggedIn = 0;
+		uint8_t pedalDown = 0;
+		
+		
+
+
+
+ 
+		uint8_t sectionKnobState = 0;
+		
+		
+
 
  
  
@@ -14289,6 +14326,34 @@ static I2C_FUNC s_I2C0HandlerFn = 0;
  
  
 
+
+ 
+ 
+ 
+
+volatile uint32_t timerCount = 0;
+
+
+
+
+
+
+
+
+
+ 
+void TMR0_IRQHandler(void)
+{
+    if(TIMER_GetIntFlag(((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))) == 1)
+    {
+         
+        TIMER_ClearIntFlag(((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000)));
+
+        timerCount++;
+    }
+}
+
+
 void SYS_Init(void)
 {
      
@@ -14318,6 +14383,11 @@ void SYS_Init(void)
 
 		((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->PWRCON |= (1ul << 0) | (1ul << 2);
 
+
+
+		 
+    ((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->PWRCON |= (1ul << 0) | (1ul << 3);
+
 		
      
     while(!(((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSTATUS & (1ul << 0)));
@@ -14330,6 +14400,14 @@ void SYS_Init(void)
 		
 
 		while(!(((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSTATUS & ((1ul << 2) | (1ul << 0) | (1ul << 4))));
+
+		
+		
+
+     
+    while(!(((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSTATUS & (1ul << 2)));
+    while(!(((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSTATUS & (1ul << 0)));
+    while(!(((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSTATUS & (1ul << 3)));
 
 		
     ((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSEL0 = (((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSEL0 & (~(7ul << 0))) | 0x02UL;
@@ -14352,6 +14430,15 @@ void SYS_Init(void)
 		
 		((GCR_T *) ((( uint32_t)0x50000000) + 0x00000))->IPRSTC2 = (1ul << 21);
     ((GCR_T *) ((( uint32_t)0x50000000) + 0x00000))->IPRSTC2 = 0;
+
+
+
+		 
+    ((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->APBCLK |= (1ul << 2);
+		
+		 
+    ((CLK_T *) ((( uint32_t)0x50000000) + 0x00200))->CLKSEL1 |= 0x01000000UL | 0x00000500UL;
+		
 
 
      
@@ -14533,15 +14620,15 @@ void setPwm(){
 	
 		 
 		
-		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR0 = 0x100;
-		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR1 = 0x100;
-		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR2 = 0x100;
-		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR3 = 0x100;
+		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR0 = 0x1000;
+		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR1 = 0x1000;
+		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR2 = 0x1000;
+		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CNR3 = 0x1000;
 											
-		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR0 = 0x100;
-		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR1 = 0x100;
-		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR2 = 0x100;
-		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR3 = 0x100;
+		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR0 = 0x1000;
+		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR1 = 0x1000;
+		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR2 = 0x1000;
+		((PWM_T *) ((( uint32_t)0x40100000) + 0x40000))->CNR3 = 0x1000;
 
 		 
 		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->POE |= (1ul << 0);
@@ -14890,7 +14977,7 @@ void AdcContScanModeTest()
 				if((int)(sliderDataAccumulation[1] / 10.0) > sliderDataAverage[1] + 1 ||
 					 (int)(sliderDataAccumulation[1] / 10.0) < sliderDataAverage[1] - 1){
 						sliderDataAverage[1] = (int)(sliderDataAccumulation[1] / 10.0);
-						printf("slider 1:%d\n", sliderDataAverage[1]);
+						printf("slider 2:%d\n", sliderDataAverage[1]);
 				}
 				adcScanCount = 0;
 				sliderDataAccumulation[0] = 0;
@@ -14929,6 +15016,28 @@ void setI2c(){
 		}
 }
 
+void setTimer(){
+		printf("+-------------------------------------------------+\n");
+    printf("|    Timer0 Power-down and Wake-up Sample Code    |\n");
+    printf("+-------------------------------------------------+\n\n");
+
+    printf("# Timer Settings:\n");
+    printf("  Timer0: Clock source is LIRC(10 kHz); Toggle-output mode and frequency is 2 Hz; Enable interrupt and wake-up.\n");
+    printf("# System will enter to Power-down mode while Timer0 interrupt count is reaching 3;\n");
+    printf("  And be waken-up while Timer0 interrupt count is reaching 4.\n\n");
+	
+		 
+		((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))->TCMPR = (10000UL) / 1000UL;	
+		((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))->TCSR = (2UL << 27) | (1ul << 29) | (1ul << 23);
+		((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000))->TCSR = (1ul << 29) | (1UL << 27);
+	
+		 
+    NVIC_EnableIRQ(TMR0_IRQn);
+
+     
+    TIMER_Start(((TIMER_T *) ((( uint32_t)0x40000000) + 0x10000)));
+}
+
 void SetPin(uint8_t port, uint8_t pin, uint8_t value){
 	(*((volatile uint32_t *)(((((( uint32_t)0x50000000) + 0x4000) + 0x0200)+(0x20*(port))) + ((pin)<<2)))) = value;
 }
@@ -14950,7 +15059,6 @@ void ReadPanel(){
 	
 		uint8_t i, j, k;
 	
-		uint8_t pressed[24] = {0};
 		uint8_t pressedNum = 0;
 		
 		char tempCommand[16];
@@ -14978,60 +15086,213 @@ void ReadPanel(){
 				SetPin(3, 2, 0);
 			
 			for(j = 0; j < 8; j++){
-				
-				
-				
-				if(i == 8 || i ==10 || i == 12){
+				if(i == 8 || i ==10 || i == 12){	
 					
-					pressedNum = (i-8)/2*8+j;
-					if(GetPin(0, j) == 0){
-						if(pressed[pressedNum] == 0){
-							pressed[pressedNum] = 1;
-							
-							memset(tempCommand, 0x0, 16);
-							sprintf(value, "%03d", 127 + 23 - pressedNum);
-							strncpy(tempCommand, value, 3);
-							
-							strncat(tempCommand, ",", 1);
-							
-							sprintf(value, "%03d", rand()%128);
-							strncat(tempCommand, value, 3);
-							
-							
-							
-							
-							
-							memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
-							i2cWriteDataEndPos++;
-							if(i2cWriteDataEndPos == 16)
-								i2cWriteDataEndPos = 0;
-							
-							
-							printf("read input %d %d \n", i, j);
-							
+						pressedNum = (i-8)/2*8+j;
+						if(GetPin(0, j) == 0){
+								if(pressedKey[pressedNum] == 0){
+										pressedKeyTime[pressedNum] = timerCount;
+										pressedKey[pressedNum] = 1;
+										
+										memset(tempCommand, 0x0, 16);
+										sprintf(value, "%03d", 127 + 23 - pressedNum);
+										strncpy(tempCommand, value, 3);
+										
+										strncat(tempCommand, ",", 1);
+										
+										sprintf(value, "%03d", rand()%128);
+										strncat(tempCommand, value, 3);
+										
+										
+										
+										
+										
+										memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+										i2cWriteDataEndPos++;
+										if(i2cWriteDataEndPos == 16)
+											i2cWriteDataEndPos = 0;
+										
+										
+										
+									
+								}
 						}
-					}
-					else
-						pressed[pressedNum] = 0;
-					
+						else if(pressedKey[pressedNum] == 2 || 
+										pressedKey[pressedNum] == 3){  
+								printf("release [%d] - %d %d at %ds\n", pressedNum, i, j, timerCount);
+								pressedKey[pressedNum] = 0;
+						}
+						else if(pressedKey[pressedNum] == 1){	
+								pressedKeyTime[pressedNum] = 0;
+								pressedKey[pressedNum] = 0;
+						}
+						
+				}
+				else if(i == 9 || i ==11 || i == 13){	
+						if(GetPin(0, j) == 0){
+								pressedNum = (i-8)/2*8+j;
+								if(pressedKey[pressedNum] == 1){
+										
+										printf("press [%d] %d %d with speed %ds\n", pressedNum, i, j, timerCount - pressedKeyTime[pressedNum]);
+										pressedKey[pressedNum] = 2;
+									
+								}
+								
+						}
 				}
 				else{
 					
 					if(GetPin(0, j) == 0){
-						if(i ==14 && (j == 4 || j == 5)){}
-						else
-								printf("read input i:%d j:%d \n",i, j);
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
-						
+							if(i ==14 && (j == 4 || j == 5)){
+									switch(sectionKnobState){
+									case 0:
+											if(GetPin(0, 4) == 0 && GetPin(0, 5) != 0){
+													sectionKnobState = 1;
+													printf("section knob forward.\n");
+											}
+											else if(GetPin(0, 5) == 0 && GetPin(0, 4) != 0){
+													sectionKnobState = 2;
+													printf("section knob backward.\n");
+											}
+											break;
+									case 1:
+									case 2:
+											if(GetPin(0, 4) == 0 && GetPin(0, 5) == 0){
+													sectionKnobState = 0;
+													printf("section knob floating.\n");
+											}
+											break;
+									}
+							}
+							else{
+									if(i == 14){
+											switch(j){
+											case 1:
+													if(sensitiveButton != 1){
+															sensitiveButton = 1;
+															printf("Press Sensitive button.\n");
+													}
+													break;
+											case 2:
+													if(sustainButton != 1){
+															sustainButton = 1;
+															printf("Press Sustain button.\n");
+													}
+													break;
+											case 3:
+													if(speedButton != 1){
+															speedButton = 1;
+															printf("Press Speed button.\n");
+													}
+													break;
+													
+												
+											}
+										
+									}
+									else if(i ==15){
+											switch(j){
+											case 0:
+													if(pauseButton != 1){
+															pauseButton = 1;
+															printf("Press Pause button.\n");
+													}
+													break;
+											case 1:
+													if(raiseOctaceButton != 1){
+															raiseOctaceButton = 1;
+															printf("Press Raise octave button.\n");
+													}
+													break;
+											case 2:
+													if(lowerOctaceButton != 1){
+															lowerOctaceButton = 1;
+															printf("Press Lower octave button.\n");
+													}
+													break;
+											case 3:
+													if(pedalDown != 1){
+															pedalDown = 1;
+															printf("Pedal Down.\n");
+													}
+													break;
+											case 4:
+													printf("Speed knob forward.\n");
+													break;
+											case 5:
+													printf("Speed knob backward.\n");
+													break;
+													
+												
+											}
+									}
+								
+								
+									
+							}
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+							
+					}
+					else{
+							if(i == 14){
+									switch(j){
+									case 1:
+											if(sensitiveButton == 1){
+													sensitiveButton = 0;
+													printf("Release Sensitive button.\n");
+											}
+											break;
+									case 2:
+											if(sustainButton == 1){
+													sustainButton = 0;
+													printf("Release Sustain button.\n");
+											}
+											break;
+									case 3:
+											if(speedButton == 1){
+													speedButton = 0;
+													printf("Release Speed button.\n");
+											}
+											break;
+									}
+							}
+							else if(i ==15){
+									switch(j){
+									case 0:
+											if(pauseButton == 1){
+													pauseButton = 0;
+													printf("Release Pause button.\n");
+											}
+											break;
+									case 1:
+											if(raiseOctaceButton == 1){
+													raiseOctaceButton = 0;
+													printf("Release Raise octave button.\n");
+											}
+											break;
+									case 2:
+											if(lowerOctaceButton == 1){
+													lowerOctaceButton = 0;
+													printf("Release Lower octave button.\n");
+											}
+											break;
+									case 3:
+											if(pedalDown == 1){
+													pedalDown = 0;
+													printf("Pedal Up.\n");
+											}
+											break;
+									}
+							}
 					}
 				}
 			}
@@ -15090,16 +15351,16 @@ void SetPwmLightRing(int position){
 		
 		
 		
-		uint8_t brightnessArray[8] = {0};
-		uint8_t i;
+		uint16_t brightnessArray[8] = {0};
+		uint16_t i;
 		
 		for(i = 0;i < 8; i++){
 				if(i > position)
 					brightnessArray[i] = 0x0;
 				else if(i == position)
-					brightnessArray[i] = 0xF0;
+					brightnessArray[i] = 0xFF0;
 				else
-					brightnessArray[i] = 0x20;
+					brightnessArray[i] = 0x100;
 		}
 		
 		((PWM_T *) ((( uint32_t)0x40000000) + 0x40000))->CMR0 = brightnessArray[7];
@@ -15161,7 +15422,7 @@ int main(void)
 		
 		setI2c();
 
-    
+    setTimer();
 		
 		
 		 
@@ -15170,11 +15431,12 @@ int main(void)
 			
 			ReadPanel();
 			
-			if(count % 100 == 0)
+			if(timerCount % 10 == 0)
 				AdcContScanModeTest();
 			
 			
 				
+			
 			
 			if(count % 1000 == 50){
 					SetPwmLightRing(lightPos / 2);
@@ -15186,6 +15448,10 @@ int main(void)
 			
 			if(++count > 10000)
 				count = 0;
+			
+			
+			
+			
 		}
 			
 		
