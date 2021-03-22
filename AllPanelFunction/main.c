@@ -43,6 +43,16 @@
 		uint8_t pauseButton = 0;
 		uint8_t speedButton = 0;
 		
+		/* Only continuous two forward or backward will enable speed change
+		 * if keep getting the same signal, it will be masked out.(ex. 1>2>1>2>1>2)
+		 * 0:no state
+		 * 1:foward state
+		 * 2:forwarded state
+		 * 3:backward state
+		 * 4:backwarded state
+		 */
+		uint8_t lastSpeedKnobState = 0;
+		
 		uint8_t pedalpluggedIn = 0;
 		uint8_t pedalDown = 0;
 		
@@ -64,7 +74,7 @@ void AdcContScanModeTest(void);
 
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* ADC                                                                                           */
+/* ADC                                                                                                     */
 /*---------------------------------------------------------------------------------------------------------*/
 double sliderDataAccumulation[2] = {0};
 int sliderDataAverage[2] = {0};
@@ -72,7 +82,7 @@ uint8_t adcScanCount = 0;
 #define MaxAdcScanTimes 10.0
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* indicator lights                                                                                             */
+/* indicator lights                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
 
 uint8_t indicatorLights[16] = {0};
@@ -80,6 +90,29 @@ uint8_t indicatorLights[16] = {0};
 #define LatchPin P14
 #define DataPin P15
 #define ClockPin P17
+
+
+/*---------------------------------------------------------------------------------------------------------*/
+/* PWM lights                                                                                              */
+/*---------------------------------------------------------------------------------------------------------*/
+
+/* forward: 0>1>0>1, backward: 0>2>0>2
+ * 0: turn off
+ * 1: revolve around
+ * 2: fading
+ * 3: pause revolve around
+ * 4: pause fading
+ */
+uint8_t pwmLightEffectType;
+
+/*
+ * unit: ms
+ */
+uint16_t pwmTimeLength;
+uint16_t pwmTimeLengthLeft;
+
+
+
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* I2C Start                                                                                               */
@@ -114,10 +147,23 @@ static I2C_FUNC s_I2C0HandlerFn = NULL;
 
 
 /*---------------------------------------------------------------------------------------------------------*/
-/* Timer function                                                                                                */
+/* Timer function                                                                                          */
 /*---------------------------------------------------------------------------------------------------------*/
 
+/*
+ * unit: ms
+ */
 volatile uint32_t timerCount = 0;
+
+/*
+ * last while loop run time
+ */
+uint32_t lastRunTimerCount = 0;
+
+/*
+ * last light display time
+ */
+uint32_t lastFrameTimerCount = 0;
 
 /**
  * @brief       Timer0 IRQ
@@ -139,6 +185,9 @@ void TMR0_IRQHandler(void)
     }
 }
 
+/*---------------------------------------------------------------------------------------------------------*/
+/* Timer End                                                                                               */
+/*---------------------------------------------------------------------------------------------------------*/
 
 void SYS_Init(void)
 {
@@ -1003,13 +1052,31 @@ void ReadPanel(){
 													}
 													break;
 											case 4:
-													printf("Speed knob forward.\n");
+													if(lastSpeedKnobState == 0){	// avoid floating state
+															lastSpeedKnobState = 1;
+															//printf("Speed knob floating forward.\n");
+													}
+													else if(lastSpeedKnobState == 1){
+															lastSpeedKnobState = 2;
+															printf("Speed knob forward.\n");
+													}
+													else if(lastSpeedKnobState == 3){
+															lastSpeedKnobState = 0;
+													}
 													break;
 											case 5:
-													printf("Speed knob backward.\n");
+													if(lastSpeedKnobState == 0){	// avoid floating state
+															lastSpeedKnobState = 3;
+															//printf("Speed knob floating backward.\n");
+													}
+													else if(lastSpeedKnobState == 3){
+															lastSpeedKnobState = 4;
+															printf("Speed knob backward.\n");
+													}
+													else if(lastSpeedKnobState == 1){
+															lastSpeedKnobState = 0;
+													}
 													break;
-													
-												
 											}
 									}
 								
@@ -1077,6 +1144,18 @@ void ReadPanel(){
 													printf("Pedal Up.\n");
 											}
 											break;
+									case 4:
+											if(lastSpeedKnobState == 2){	// avoid continuous signal
+													lastSpeedKnobState = 0;
+													//printf("Remove Speed knob forwarded state.\n");
+											}
+											break;
+									case 5:
+											if(lastSpeedKnobState == 4){	// avoid continuous signal
+													lastSpeedKnobState = 0;
+													//printf("Remove Speed knob backwarded state.\n");
+											}
+											break;
 									}
 							}
 					}
@@ -1084,12 +1163,50 @@ void ReadPanel(){
 			}
 		}
 		
+		if(GetPin(4, 0) == 1){
+				if(powerButton == 0){
+						powerButton = 1;
+						printf("Press power button.\n");
+				}
+		}
+		else{
+				if(powerButton == 1){
+						powerButton = 0;
+						printf("Release power button.\n");
+				}
+		}
+		
+		if(GetPin(1, 3) == 1){
+				if(pedalpluggedIn == 0){
+						pedalpluggedIn = 1;
+						printf("Pedal plugged in.\n");
+				}
+		}
+		else{
+				if(pedalpluggedIn == 1){
+						pedalpluggedIn = 0;
+						printf("Pedal plugged out.\n");
+				}
+		}
+		
 		//printf("power:%d pedal:%d\n", P40, P13);
 		
 }
 
+/*
+ * Light number: 
+ * -1: turn off all lights
+ * 0: power
+ * 1: sentivity
+ * 2: sustain
+ * 3: raise octave
+ *    *13
+ * *8    *12
+ * *9    *11
+ *    *10
+ * 14: lower octave
+ */
 void SetIndicatorLights(int lightNumber, int on){
-		
 		
 		// 0: power
 		// 1: sentivity
@@ -1102,13 +1219,83 @@ void SetIndicatorLights(int lightNumber, int on){
 		// 14: lower octave
 	
 		uint8_t i, j;
+	
+		if(lightNumber > 15)
+				return ;
+	
+		if(lightNumber < 0){
+			  for(i = 0; i < 16; i++){
+						indicatorLights[i] = 0;
+				}
+		}
+		else{
+				
+				if(on == 1)
+					indicatorLights[lightNumber] = 1;
+				else if(on == 0)
+					indicatorLights[lightNumber] = 0;
+		}
+	
 		// https://ddddiy.blogspot.com/2014/02/74hct595n.html
-		if(on == 1)
-			indicatorLights[lightNumber] = 1;
-		else if(on == 0)
-			indicatorLights[lightNumber] = 0;
+		for(i = 0; i < 16; i++){
+				LatchPin = 0;
+				for(j = 15; j < 16; j--){
+						ClockPin = 0;
+						
+						if(indicatorLights[j] == 1)
+							DataPin = 1;
+						else
+							DataPin = 0;
+						
+						ClockPin = 1;
+				}
+				LatchPin = 1;
+			
+		}
+}
+
+/* positive speed	
+ *    *0
+ * *     *1
+ * *4    *2
+ *    *3
+ * negative speed
+ *    *0
+ * *-1   *
+ * *-2   *-4
+ *    *-3
+ *
+ * 5: reset
+ */
+void SetSpeedKnobLightRing(int lightNumber){
+		//    *13
+		// *8    *12
+		// *9    *11
+		//    *10
 	
+		uint8_t i, j;
 	
+		if(lightNumber > 5 || lightNumber < -4)
+				return ;
+		
+		// reset light ring
+		for(i = 8; i < 14; i++)
+				indicatorLights[i] = 0;
+		
+		if(lightNumber < 0){
+				indicatorLights[13] = 1;
+				for(i = 8; i < 8 - lightNumber; i++){
+						indicatorLights[i] = 1;
+				}
+		}
+		else if(lightNumber > 0 && lightNumber < 5){
+				indicatorLights[13] = 1;
+				for(i = 12; i > 12 - lightNumber; i--){
+						indicatorLights[i] = 1;
+				}
+		}
+	
+		// https://ddddiy.blogspot.com/2014/02/74hct595n.html
 		for(i = 0; i < 16; i++){
 				LatchPin = 0;
 				for(j = 15; j < 16; j--){
@@ -1127,7 +1314,7 @@ void SetIndicatorLights(int lightNumber, int on){
 }
 
 /*
- * position: 0~8
+* position: 0~8, -1:turn 0ff
  */
 void SetPwmLightRing(int position){
 	
@@ -1160,6 +1347,118 @@ void SetPwmLightRing(int position){
 		PWMB->CMR3 = brightnessArray[0];
 }
 
+/*
+ * Effect type: 
+ * 0: turn off
+ * 1: revolve around
+ * 2: fading
+ * 3: pause(<0) or resume(>0) effect
+ */
+void SetLightRingEffect(int effectType, float timeLength){
+		switch(effectType){
+				case 0:
+						pwmLightEffectType = 0;
+						break;
+				case 1:
+						pwmLightEffectType = 1;
+						pwmTimeLength = timeLength * 1000;
+						pwmTimeLengthLeft = pwmTimeLength;
+						break;
+				case 2:
+						pwmLightEffectType = 3;
+						pwmTimeLength = timeLength * 1000;
+						pwmTimeLengthLeft = pwmTimeLength;
+						break;
+				case 3:
+						if(pwmLightEffectType == 1 && timeLength < 0){	// pause revolve
+								pwmLightEffectType = 2;
+						}
+						else if(pwmLightEffectType == 2 && timeLength > 0){	// resume revolve
+								pwmLightEffectType = 1;
+						}
+						else if(pwmLightEffectType == 3 && timeLength < 0){	// pause fading
+								pwmLightEffectType = 4;
+						}
+						else if(pwmLightEffectType == 4 && timeLength > 0){	// resume fading
+								pwmLightEffectType = 3;
+						}
+						break;
+		}
+}
+
+void UpdateLightRingEffect(uint16_t elapsedFrameTime){
+		
+		if(pwmLightEffectType == 0 || pwmLightEffectType == 2 || pwmLightEffectType == 4)
+				return;
+		
+		if(pwmLightEffectType == 1){
+				
+		}
+		
+		
+}
+
+void DecodeMessage(char* message){
+	
+		// https://medium.com/andy%E7%9A%84%E8%B6%A3%E5%91%B3%E7%A8%8B%E5%BC%8F%E7%B7%B4%E5%8A%9F%E5%9D%8A/c%E8%AA%9E%E8%A8%80-03-%E7%A7%92%E6%87%82%E5%AD%97%E4%B8%B2%E8%99%95%E7%90%86%E5%87%BD%E6%95%B8-%E4%B8%8B-824253379483
+		
+		char* pointer;
+		float value1, value2;
+		
+		pointer = strtok(message, ",");
+		if(pointer == NULL)
+			 return;
+		
+		if(strcmp(pointer, "RV") == 0){			// RV - Revolve around light ring
+				pointer = strtok(NULL, ",");
+				value1 = atof(pointer);
+				if(value1 > 0)
+						SetLightRingEffect(1, value1);
+				else
+						SetLightRingEffect(0, value1);	// turn off
+		}
+		else if(strcmp(pointer, "BT") == 0){// BT - bluetooth light ring
+				pointer = strtok(NULL, ",");
+				value1 = atof(pointer);
+				if(value1 > 0)
+						SetLightRingEffect(2, value1);
+				else
+						SetLightRingEffect(0, value1);	// turn off
+		}
+		else if(strcmp(pointer, "PS") == 0){	//PS - pause light ring
+				pointer = strtok(NULL, ",");
+				value1 = atof(pointer);
+				
+				SetLightRingEffect(3, value1);		// pause or resume
+		}
+		else if(strcmp(pointer, "IR") == 0){	//IR - indicator light
+				pointer = strtok(NULL, ",");
+				value1 = atoi(pointer);
+				
+				if(pointer != NULL)
+						pointer = strtok(NULL, ",");
+				value2 = atoi(pointer);
+				
+				SetIndicatorLights(value1, value2);		// choose light to turn on or off
+		}
+		else if(strcmp(pointer, "SK") == 0){	//SK - Speed knob light ring
+				pointer = strtok(NULL, ",");
+				value1 = atoi(pointer);
+				
+				SetSpeedKnobLightRing(value1);		// set speed light ring or reset
+		}
+		else if(strcmp(pointer, "RS") == 0){	//RS - Reset all lights
+				pointer = strtok(NULL, ",");
+				value1 = atoi(pointer);
+				
+				SetLightRingEffect(0, 0);		// Turn off section light ring
+				SetIndicatorLights(-1, 0);
+		}
+		
+	
+	
+}
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* MAIN function                                                                                           */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -1169,7 +1468,8 @@ int main(void)
 		int count = 0;
 		int lightPos = 0;
 		
-
+		char arr[] = "LR,2.55";
+		
     /* Unlock protected registers */
     SYS_UnlockReg();
 
@@ -1209,6 +1509,8 @@ int main(void)
 		setI2c();
 
     setTimer();
+		
+		DecodeMessage(arr);
 		
 		
 		/* --------------------main-----------------------*/
