@@ -96,11 +96,11 @@ uint8_t indicatorLights[16] = {0};
 /* PWM lights                                                                                              */
 /*---------------------------------------------------------------------------------------------------------*/
 
-/* forward: 0>1>0>1, backward: 0>2>0>2
+/* 
  * 0: turn off
  * 1: revolve around
- * 2: fading
- * 3: pause revolve around
+ * 2: pause revolve around
+ * 3: fading
  * 4: pause fading
  */
 uint8_t pwmLightEffectType;
@@ -164,6 +164,11 @@ uint32_t lastRunTimerCount = 0;
  * last light display time
  */
 uint32_t lastFrameTimerCount = 0;
+
+/*
+ * last adc scan time
+ */
+uint32_t lastAdcScanTimerCount = 0;
 
 /**
  * @brief       Timer0 IRQ
@@ -1294,6 +1299,9 @@ void SetSpeedKnobLightRing(int lightNumber){
 						indicatorLights[i] = 1;
 				}
 		}
+		else if(lightNumber == 0){
+				indicatorLights[13] = 1;
+		}
 	
 		// https://ddddiy.blogspot.com/2014/02/74hct595n.html
 		for(i = 0; i < 16; i++){
@@ -1348,6 +1356,31 @@ void SetPwmLightRing(int position){
 }
 
 /*
+ * brightness:
+ * 1>2>4>8>16>32>64>128>256>512>1024>2048
+ */
+void SetPwmLightRingFading(double brightness){
+	
+		uint16_t brightnessConverted;
+	
+		if(brightness > 11)
+				return;
+	
+		//brightnessConverted = 0x1 << brightness / 2;
+		brightnessConverted = pow(2, brightness);
+		
+		PWMA->CMR0 = brightnessConverted;
+		PWMA->CMR1 = brightnessConverted;
+		PWMA->CMR2 = brightnessConverted;
+		PWMA->CMR3 = brightnessConverted;
+								 
+		PWMB->CMR0 = brightnessConverted;
+		PWMB->CMR1 = brightnessConverted;
+		PWMB->CMR2 = brightnessConverted;
+		PWMB->CMR3 = brightnessConverted;		
+}
+
+/*
  * Effect type: 
  * 0: turn off
  * 1: revolve around
@@ -1363,6 +1396,7 @@ void SetLightRingEffect(int effectType, float timeLength){
 						pwmLightEffectType = 1;
 						pwmTimeLength = timeLength * 1000;
 						pwmTimeLengthLeft = pwmTimeLength;
+						printf("pwm light effect 1 with time %d ms\n", pwmTimeLengthLeft);
 						break;
 				case 2:
 						pwmLightEffectType = 3;
@@ -1388,13 +1422,55 @@ void SetLightRingEffect(int effectType, float timeLength){
 
 void UpdateLightRingEffect(uint16_t elapsedFrameTime){
 		
+		int position, brightness;
+	
 		if(pwmLightEffectType == 0 || pwmLightEffectType == 2 || pwmLightEffectType == 4)
 				return;
 		
 		if(pwmLightEffectType == 1){
+			
+				if(elapsedFrameTime < pwmTimeLengthLeft)
+						pwmTimeLengthLeft -= elapsedFrameTime;
+				else{
+						pwmLightEffectType = 0;
+						SetPwmLightRing(-1);
+						return;
+				}
 				
+				/* position = round(time left / total time * 8) */
+				position = 8 - (int)(((float)pwmTimeLengthLeft) * 8.f / (float)pwmTimeLength + 0.5f);
+				//printf("test float %f , %f , %f, %f\n", (float)pwmTimeLengthLeft ,((float)pwmTimeLengthLeft) * 8.f, ((float)pwmTimeLengthLeft) * 8.f / (float)pwmTimeLength, round(((float)pwmTimeLengthLeft) * 8.f / (float)pwmTimeLength));
+				//printf("position %d, pwm time left %d\n", position, pwmTimeLengthLeft);
+				if(position < 8){
+						SetPwmLightRing(position);
+				}
+				else if(position == 8){
+						SetPwmLightRing(7);
+				}
 		}
-		
+		else if(pwmLightEffectType == 3){
+			
+				pwmTimeLengthLeft -= elapsedFrameTime;
+			
+				if(pwmTimeLengthLeft < pwmTimeLength / 2){	// former half - lighting up
+						brightness = (float)pwmTimeLengthLeft  / (float)(pwmTimeLength / 2) * 12.f;
+				}
+				else if(pwmTimeLengthLeft < pwmTimeLength){	// latter half - darken down
+						brightness = (float)(pwmTimeLength - pwmTimeLengthLeft) / (float)(pwmTimeLength / 2) * 12.f;
+				}
+				else{																				// restart a run
+						pwmTimeLengthLeft = pwmTimeLength;
+						return;
+				}
+				
+				if(brightness < 12){
+						SetPwmLightRingFading(brightness);
+				}
+				else if(brightness >= 12){
+						SetPwmLightRingFading(12);
+				}
+			
+		}
 		
 }
 
@@ -1437,6 +1513,9 @@ void DecodeMessage(char* message){
 				
 				if(pointer != NULL)
 						pointer = strtok(NULL, ",");
+				else
+					return;
+				
 				value2 = atoi(pointer);
 				
 				SetIndicatorLights(value1, value2);		// choose light to turn on or off
@@ -1515,23 +1594,29 @@ int main(void)
 		
 		/* --------------------main-----------------------*/
 		
+		SetLightRingEffect(2, 3);
+		
 		while(1){
 			
 			ReadPanel();
 			
-			if(timerCount % 10 == 0)
-				AdcContScanModeTest();
+			if(timerCount > lastAdcScanTimerCount + 0x10 || timerCount < lastAdcScanTimerCount){
+					AdcContScanModeTest();
+					lastAdcScanTimerCount = timerCount;
+			}
 			
 			//if(count % 1000 == 0)
 				//printf("%d\n", count);
 			
 			//if(timerCount % 1000 == 50){
 			if(count % 1000 == 50){
-					SetPwmLightRing(lightPos / 2);
+					//SetPwmLightRing(lightPos / 2);
 					SetIndicatorLights(lightPos, 1);
 					SetIndicatorLights(lightPos - 1 < 0 ? 15 : lightPos - 1, 0);
 					if(++lightPos == 16)
 						lightPos = 0;
+					
+					SetSpeedKnobLightRing(lightPos / 2 - 4);
 			}
 			
 			if(++count > 10000)
@@ -1539,6 +1624,13 @@ int main(void)
 			
 			//if(timerCount % 1000 == 0)
 			//	printf("%ds\n", timerCount / 1000);
+			lastRunTimerCount = timerCount;
+			
+			/* 50 fps / update frame every 20 ms */
+			if(timerCount > lastFrameTimerCount + 0x20 || timerCount < lastFrameTimerCount){
+					UpdateLightRingEffect(0x20);
+					lastFrameTimerCount = timerCount;
+			}
 			
 		}
 			
