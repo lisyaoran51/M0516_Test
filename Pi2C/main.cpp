@@ -33,27 +33,32 @@ int main(){
 	
 	char chars1[10] = "abcdefgh\0";
 	while(1){
-	char chars2[10] = "qqqqqqqq\0";
+		char chars2[10] = "RV,3.3\0";
 	
 		interface->i2cWrite(chars2, 10);
 		std::cout << "send" << std::endl;
 		sleep(1);
-		char chars3[10] = "nhnhnhnh\0";
+		char chars3[10] = "PS,-1\0";
 		
 		interface->i2cWrite(chars3, 10);
 		std::cout << "send" << std::endl;
 		sleep(1);
-		char chars4[10] = "ujujujuj\0";
+		char chars4[10] = "PS,1\0";
 		
 		interface->i2cWrite(chars4, 10);
 		std::cout << "send" << std::endl;
 		sleep(1);
-		char chars5[10] = "qsqsqsqs\0";
+		char chars5[10] = "SK,3\0";
 		
 		interface->i2cWrite(chars5, 10);
 		std::cout << "send" << std::endl;
 		sleep(1);
-		char chars6[10] = "zszszszs\0";
+		char chars6[10] = "IR,2,1\0";
+		
+		interface->i2cWrite(chars6, 10);
+		std::cout << "send" << std::endl;
+		sleep(1);
+		char chars7[10] = "IR,2,0\0";
 		
 		interface->i2cWrite(chars6, 10);
 		std::cout << "send" << std::endl;
