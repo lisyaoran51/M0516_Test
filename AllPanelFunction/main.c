@@ -133,9 +133,6 @@ uint8_t i2cTempReadBuffer[16] = {0};
 volatile uint8_t writeDataLen = 0;
 volatile uint8_t readDataLen = 0;
 
-/*---------------------------------------------------------------------------------------------------------*/
-/* Global variables                                                                                        */
-/*---------------------------------------------------------------------------------------------------------*/
 
 typedef void (*I2C_FUNC)(uint32_t u32Status);
 
@@ -296,6 +293,11 @@ void SYS_Init(void)
     CLK->APBCLK |= CLK_APBCLK_ADC_EN_Msk ;
 // -------ADC-------end
 
+// -------I2C-------
+		/* Enable I2C module clock */
+    CLK->APBCLK |= CLK_APBCLK_I2C0_EN_Msk ;
+// -------I2C-------end
+
 
     /* Select UART module clock source */
     CLK->CLKSEL1 = (CLK->CLKSEL1 & (~CLK_CLKSEL1_UART_S_Msk)) | CLK_CLKSEL1_UART_S_PLL;
@@ -329,6 +331,11 @@ void SYS_Init(void)
     SYS->P1_MFP |= SYS_MFP_P10_AIN0 | SYS_MFP_P11_AIN1 | SYS_MFP_P12_AIN2; //| SYS_MFP_P13_AIN3 ;
 // -------ADC-------end
 		
+// -------I2C-------
+		/* Configure the SDA0 & SCL0 of I2C0 pins */
+    SYS->P3_MFP &= ~(SYS_MFP_P34_Msk | SYS_MFP_P35_Msk);
+    SYS->P3_MFP |= (SYS_MFP_P34_SDA0 | SYS_MFP_P35_SCL0);
+// -------I2C-------end
 }
 
 void I2C0_SYS_Init(void)
@@ -754,6 +761,8 @@ void AdcContScanModeTest()
     uint32_t u32ChannelCount;
     int32_t  i32ConversionData;
 		double conversedData;
+		char tempCommand[16];
+		char value[4];
 
     //printf("\n\nConversion rate: %d samples/second\n", ADC_GetConversionRate());
     //printf("\n");
@@ -813,11 +822,29 @@ void AdcContScanModeTest()
 					 (int)(sliderDataAccumulation[0] / MaxAdcScanTimes) < sliderDataAverage[0] - 1){
 						sliderDataAverage[0] = (int)(sliderDataAccumulation[0] / MaxAdcScanTimes);
 						printf("slider 1:%d\n", sliderDataAverage[0]);
+						 
+						memset(tempCommand, 0x0, 16);
+						sprintf(tempCommand, "1030,");
+						sprintf(value, "%03d", sliderDataAverage[0] - 90 < 0 ? 0 : sliderDataAverage[0] - 90);
+						strncat(tempCommand, value, 3);
+						memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+						i2cWriteDataEndPos++;
+						if(i2cWriteDataEndPos == 16)
+								i2cWriteDataEndPos = 0;
 				}
 				if((int)(sliderDataAccumulation[1] / MaxAdcScanTimes) > sliderDataAverage[1] + 1 ||
 					 (int)(sliderDataAccumulation[1] / MaxAdcScanTimes) < sliderDataAverage[1] - 1){
 						sliderDataAverage[1] = (int)(sliderDataAccumulation[1] / MaxAdcScanTimes);
 						printf("slider 2:%d\n", sliderDataAverage[1]);
+						
+						memset(tempCommand, 0x0, 16);
+						sprintf(tempCommand, "1031,");
+						sprintf(value, "%03d", sliderDataAverage[1] - 90 < 0 ? 0 : sliderDataAverage[1] - 90);
+						strncat(tempCommand, value, 3);
+						memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+						i2cWriteDataEndPos++;
+						if(i2cWriteDataEndPos == 16)
+								i2cWriteDataEndPos = 0;
 				}
 				adcScanCount = 0;
 				sliderDataAccumulation[0] = 0;
@@ -934,6 +961,7 @@ void ReadPanel(){
 										pressedKeyTime[pressedNum] = timerCount;
 										pressedKey[pressedNum] = 1;
 										
+										/*
 										memset(tempCommand, 0x0, 16);
 										sprintf(value, "%03d", 127 + 23 - pressedNum);
 										strncpy(tempCommand, value, 3);
@@ -951,6 +979,7 @@ void ReadPanel(){
 										i2cWriteDataEndPos++;
 										if(i2cWriteDataEndPos == 16)
 											i2cWriteDataEndPos = 0;
+										*/
 										
 										//printf("read input %s %d\n",tempCommand, i2cWriteDataEndPos);
 										//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
@@ -959,7 +988,20 @@ void ReadPanel(){
 						}
 						else if(pressedKey[pressedNum] == 2 || // means the second pad was pressed
 										pressedKey[pressedNum] == 3){  // means after release second pad
-								printf("release [%d] - %d %d at %ds\n", pressedNum, i, j, timerCount);
+								//printf("release [%d] - %d %d at %ds\n", pressedNum, i, j, timerCount);
+								
+								memset(tempCommand, 0x0, 16);
+								sprintf(value, "%03d", 127 + 23 - pressedNum);
+								strncpy(tempCommand, value, 3);
+								strncat(tempCommand, ",-1", 3);
+								memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+								i2cWriteDataEndPos++;
+								if(i2cWriteDataEndPos == 16)
+										i2cWriteDataEndPos = 0;
+								
+										
+								//printf("%s\n", tempCommand);
+								
 								pressedKey[pressedNum] = 0;
 						}
 						else if(pressedKey[pressedNum] == 1){	// means on pressed first pad then release
@@ -973,8 +1015,25 @@ void ReadPanel(){
 								pressedNum = (i-8)/2*8+j;
 								if(pressedKey[pressedNum] == 1){
 										//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
-										printf("press [%d] %d %d with speed %ds\n", pressedNum, i, j, timerCount - pressedKeyTime[pressedNum]);
+										//printf("press [%d] %d %d with speed %ds, velocity %f \n", pressedNum, i, j, timerCount - pressedKeyTime[pressedNum], 
+										//		pow(1.02476732964, (200 - (timerCount - pressedKeyTime[pressedNum])) * 1));
 										pressedKey[pressedNum] = 2;
+									
+										memset(tempCommand, 0x0, 16);
+										sprintf(value, "%03d", 127 + 23 - pressedNum);
+										strncpy(tempCommand, value, 3);
+										strncat(tempCommand, ",", 1);
+										// 127 = 1.02476732964 exp(200-t) big power no difference
+										// sprintf(value, "%03d", (int)pow(1.02476732964, (200 - (timerCount - pressedKeyTime[pressedNum])) * 1));
+										// 127 = 1.01230792234 exp((200-t)*2) 
+										sprintf(value, "%03d", (int)pow(1.01230792234, (200 - (timerCount - pressedKeyTime[pressedNum])) * 2));
+										strncat(tempCommand, value, 3);
+										memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+										i2cWriteDataEndPos++;
+										if(i2cWriteDataEndPos == 16)
+												i2cWriteDataEndPos = 0;
+										
+										//printf("%s\n", tempCommand);
 									
 								}
 								//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
@@ -989,10 +1048,25 @@ void ReadPanel(){
 											if(GetPin(0, 4) == 0 && GetPin(0, 5) != 0){
 													sectionKnobState = 1;
 													printf("section knob forward.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1020,1");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
+												
 											}
 											else if(GetPin(0, 5) == 0 && GetPin(0, 4) != 0){
 													sectionKnobState = 2;
 													printf("section knob backward.\n");
+													
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1020,-1");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									case 1:
@@ -1011,18 +1085,39 @@ void ReadPanel(){
 													if(sensitiveButton != 1){
 															sensitiveButton = 1;
 															printf("Press Sensitive button.\n");
+														
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1002,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													break;
 											case 2:
 													if(sustainButton != 1){
 															sustainButton = 1;
 															printf("Press Sustain button.\n");
+															
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1001,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													break;
 											case 3:
 													if(speedButton != 1){
 															speedButton = 1;
 															printf("Press Speed button.\n");
+															
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1003,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													break;
 													
@@ -1036,24 +1131,52 @@ void ReadPanel(){
 													if(pauseButton != 1){
 															pauseButton = 1;
 															printf("Press Pause button.\n");
+															
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1012,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													break;
 											case 1:
 													if(raiseOctaceButton != 1){
 															raiseOctaceButton = 1;
 															printf("Press Raise octave button.\n");
+														
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1010,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													break;
 											case 2:
 													if(lowerOctaceButton != 1){
 															lowerOctaceButton = 1;
 															printf("Press Lower octave button.\n");
+														
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1011,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													break;
 											case 3:
 													if(pedalDown != 1){
 															pedalDown = 1;
 															printf("Pedal Down.\n");
+														
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "500,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													break;
 											case 4:
@@ -1064,6 +1187,13 @@ void ReadPanel(){
 													else if(lastSpeedKnobState == 1){
 															lastSpeedKnobState = 2;
 															printf("Speed knob forward.\n");
+														
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1021,1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													else if(lastSpeedKnobState == 3){
 															lastSpeedKnobState = 0;
@@ -1077,6 +1207,13 @@ void ReadPanel(){
 													else if(lastSpeedKnobState == 3){
 															lastSpeedKnobState = 4;
 															printf("Speed knob backward.\n");
+														
+															memset(tempCommand, 0x0, 16);
+															sprintf(tempCommand, "1021,-1");
+															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+															i2cWriteDataEndPos++;
+															if(i2cWriteDataEndPos == 16)
+																	i2cWriteDataEndPos = 0;
 													}
 													else if(lastSpeedKnobState == 1){
 															lastSpeedKnobState = 0;
@@ -1107,18 +1244,39 @@ void ReadPanel(){
 											if(sensitiveButton == 1){
 													sensitiveButton = 0;
 													printf("Release Sensitive button.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1002,0");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									case 2:
 											if(sustainButton == 1){
 													sustainButton = 0;
 													printf("Release Sustain button.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1001,0");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									case 3:
 											if(speedButton == 1){
 													speedButton = 0;
 													printf("Release Speed button.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1003,0");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									}
@@ -1129,24 +1287,52 @@ void ReadPanel(){
 											if(pauseButton == 1){
 													pauseButton = 0;
 													printf("Release Pause button.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1012,0");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									case 1:
 											if(raiseOctaceButton == 1){
 													raiseOctaceButton = 0;
 													printf("Release Raise octave button.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1010,0");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									case 2:
 											if(lowerOctaceButton == 1){
 													lowerOctaceButton = 0;
 													printf("Release Lower octave button.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "1011,0");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									case 3:
 											if(pedalDown == 1){
 													pedalDown = 0;
 													printf("Pedal Up.\n");
+												
+													memset(tempCommand, 0x0, 16);
+													sprintf(tempCommand, "500,0");
+													memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+													i2cWriteDataEndPos++;
+													if(i2cWriteDataEndPos == 16)
+															i2cWriteDataEndPos = 0;
 											}
 											break;
 									case 4:
@@ -1172,12 +1358,26 @@ void ReadPanel(){
 				if(powerButton == 0){
 						powerButton = 1;
 						printf("Press power button.\n");
+					
+						memset(tempCommand, 0x0, 16);
+						sprintf(tempCommand, "1000,1");
+						memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+						i2cWriteDataEndPos++;
+						if(i2cWriteDataEndPos == 16)
+								i2cWriteDataEndPos = 0;
 				}
 		}
 		else{
 				if(powerButton == 1){
 						powerButton = 0;
 						printf("Release power button.\n");
+						
+						memset(tempCommand, 0x0, 16);
+						sprintf(tempCommand, "1000,0");
+						memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+						i2cWriteDataEndPos++;
+						if(i2cWriteDataEndPos == 16)
+								i2cWriteDataEndPos = 0;
 				}
 		}
 		
@@ -1185,12 +1385,26 @@ void ReadPanel(){
 				if(pedalpluggedIn == 0){
 						pedalpluggedIn = 1;
 						printf("Pedal plugged in.\n");
+					
+						memset(tempCommand, 0x0, 16);
+						sprintf(tempCommand, "1502,1");
+						memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+						i2cWriteDataEndPos++;
+						if(i2cWriteDataEndPos == 16)
+								i2cWriteDataEndPos = 0;
 				}
 		}
 		else{
 				if(pedalpluggedIn == 1){
 						pedalpluggedIn = 0;
 						printf("Pedal plugged out.\n");
+					
+						memset(tempCommand, 0x0, 16);
+						sprintf(tempCommand, "1502,0");
+						memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+						i2cWriteDataEndPos++;
+						if(i2cWriteDataEndPos == 16)
+								i2cWriteDataEndPos = 0;
 				}
 		}
 		
@@ -1369,6 +1583,8 @@ void SetPwmLightRingFading(double brightness){
 		//brightnessConverted = 0x1 << brightness / 2;
 		brightnessConverted = pow(2, brightness);
 		
+		//printf("brightness %f %d\n",brightness , brightnessConverted);
+		
 		PWMA->CMR0 = brightnessConverted;
 		PWMA->CMR1 = brightnessConverted;
 		PWMA->CMR2 = brightnessConverted;
@@ -1422,7 +1638,8 @@ void SetLightRingEffect(int effectType, float timeLength){
 
 void UpdateLightRingEffect(uint16_t elapsedFrameTime){
 		
-		int position, brightness;
+		float brightness;
+		int position;
 	
 		if(pwmLightEffectType == 0 || pwmLightEffectType == 2 || pwmLightEffectType == 4)
 				return;
@@ -1453,7 +1670,7 @@ void UpdateLightRingEffect(uint16_t elapsedFrameTime){
 				pwmTimeLengthLeft -= elapsedFrameTime;
 			
 				if(pwmTimeLengthLeft < pwmTimeLength / 2){	// former half - lighting up
-						brightness = (float)pwmTimeLengthLeft  / (float)(pwmTimeLength / 2) * 12.f;
+						brightness = (float)pwmTimeLengthLeft / (float)(pwmTimeLength / 2) * 12.f;
 				}
 				else if(pwmTimeLengthLeft < pwmTimeLength){	// latter half - darken down
 						brightness = (float)(pwmTimeLength - pwmTimeLengthLeft) / (float)(pwmTimeLength / 2) * 12.f;
@@ -1533,10 +1750,29 @@ void DecodeMessage(char* message){
 				SetLightRingEffect(0, 0);		// Turn off section light ring
 				SetIndicatorLights(-1, 0);
 		}
-		
-	
-	
 }
+
+void ProcessI2cMessage(){
+	
+		char newCommand[16];
+		
+		if(i2cReadDataStartPos != i2cReadDataEndPos){
+					
+				memset(newCommand, 0x0, 16);
+				memcpy(newCommand, i2cReadData[i2cReadDataStartPos], 16);
+				
+				i2cReadDataStartPos++;
+				
+				if(i2cReadDataStartPos == 16)
+						i2cReadDataStartPos = 0;	
+				
+				printf("%s \n", newCommand);
+				
+				DecodeMessage(newCommand);
+			
+		}
+}
+
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* MAIN function                                                                                           */
@@ -1581,6 +1817,8 @@ int main(void)
     printf("|        All Panel Function Sample Code           |\n");
     printf("+-------------------------------------------------+\n\n");
 		
+		I2C0_Init();
+		
 		setPwm();
 		
 		setGpio();
@@ -1594,6 +1832,10 @@ int main(void)
 		
 		/* --------------------main-----------------------*/
 		
+		// reset
+		SetIndicatorLights(-1, 0);
+		
+		// fading light ring
 		SetLightRingEffect(2, 3);
 		
 		while(1){
@@ -1609,7 +1851,7 @@ int main(void)
 				//printf("%d\n", count);
 			
 			//if(timerCount % 1000 == 50){
-			if(count % 1000 == 50){
+			if(count % 1000 == 50 && 0){
 					//SetPwmLightRing(lightPos / 2);
 					SetIndicatorLights(lightPos, 1);
 					SetIndicatorLights(lightPos - 1 < 0 ? 15 : lightPos - 1, 0);
@@ -1628,8 +1870,12 @@ int main(void)
 			
 			/* 50 fps / update frame every 20 ms */
 			if(timerCount > lastFrameTimerCount + 0x20 || timerCount < lastFrameTimerCount){
-					UpdateLightRingEffect(0x20);
+					
+					if(timerCount > lastFrameTimerCount)
+							UpdateLightRingEffect(timerCount - lastFrameTimerCount);
 					lastFrameTimerCount = timerCount;
+				
+					ProcessI2cMessage();
 			}
 			
 		}
