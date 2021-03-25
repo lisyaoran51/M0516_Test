@@ -60,7 +60,7 @@ int main(){
 		sleep(1);
 		char chars7[10] = "IR,2,0\0";
 		
-		interface->i2cWrite(chars6, 10);
+		interface->i2cWrite(chars7, 10);
 		std::cout << "send" << std::endl;
 		sleep(1);
 	}
