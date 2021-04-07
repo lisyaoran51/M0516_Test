@@ -43,16 +43,6 @@
 		uint8_t pauseButton = 0;
 		uint8_t speedButton = 0;
 		
-		/* Only continuous two forward or backward will enable speed change
-		 * if keep getting the same signal, it will be masked out.(ex. 1>2>1>2>1>2)
-		 * 0:no state
-		 * 1:foward state
-		 * 2:forwarded state
-		 * 3:backward state
-		 * 4:backwarded state
-		 */
-		uint8_t lastSpeedKnobState = 0;
-		
 		uint8_t pedalpluggedIn = 0;
 		uint8_t pedalDown = 0;
 		
@@ -166,6 +156,11 @@ uint32_t lastFrameTimerCount = 0;
  * last adc scan time
  */
 uint32_t lastAdcScanTimerCount = 0;
+
+/*
+ * debounce time
+ */
+uint32_t debounceTimerCount = 0;
 
 /**
  * @brief       Timer0 IRQ
@@ -1180,33 +1175,21 @@ void ReadPanel(){
 													}
 													break;
 											case 4:
-													if(lastSpeedKnobState == 0){	// avoid floating state
-															lastSpeedKnobState = 1;
-															//printf("Speed knob floating forward.\n");
-													}
-													else if(lastSpeedKnobState == 1){
-															lastSpeedKnobState = 2;
-															printf("Speed knob forward.\n");
+													if(debounceTimerCount + 100 < timerCount){
+															//printf("Speed knob forward.\n");
 														
 															memset(tempCommand, 0x0, 16);
-															sprintf(tempCommand, "1021,1");
-															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
-															i2cWriteDataEndPos++;
-															if(i2cWriteDataEndPos == 16)
-																	i2cWriteDataEndPos = 0;
-													}
-													else if(lastSpeedKnobState == 3){
-															lastSpeedKnobState = 0;
+														  sprintf(tempCommand, "1021,1");
+														  memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+														  i2cWriteDataEndPos++;
+														  if(i2cWriteDataEndPos == 16)
+														  		i2cWriteDataEndPos = 0;
+															debounceTimerCount = timerCount;
 													}
 													break;
 											case 5:
-													if(lastSpeedKnobState == 0){	// avoid floating state
-															lastSpeedKnobState = 3;
-															//printf("Speed knob floating backward.\n");
-													}
-													else if(lastSpeedKnobState == 3){
-															lastSpeedKnobState = 4;
-															printf("Speed knob backward.\n");
+													if(debounceTimerCount + 100 < timerCount){
+															//printf("Speed knob backward.\n");
 														
 															memset(tempCommand, 0x0, 16);
 															sprintf(tempCommand, "1021,-1");
@@ -1214,9 +1197,7 @@ void ReadPanel(){
 															i2cWriteDataEndPos++;
 															if(i2cWriteDataEndPos == 16)
 																	i2cWriteDataEndPos = 0;
-													}
-													else if(lastSpeedKnobState == 1){
-															lastSpeedKnobState = 0;
+															debounceTimerCount = timerCount;
 													}
 													break;
 											}
@@ -1336,16 +1317,12 @@ void ReadPanel(){
 											}
 											break;
 									case 4:
-											if(lastSpeedKnobState == 2){	// avoid continuous signal
-													lastSpeedKnobState = 0;
+											// avoid continuous signal
 													//printf("Remove Speed knob forwarded state.\n");
-											}
 											break;
 									case 5:
-											if(lastSpeedKnobState == 4){	// avoid continuous signal
-													lastSpeedKnobState = 0;
+											// avoid continuous signal
 													//printf("Remove Speed knob backwarded state.\n");
-											}
 											break;
 									}
 							}
@@ -1797,7 +1774,7 @@ int main(void)
 
     /* Init UART0 for printf */
     UART0_Init();
-	/*
+		/*
         To enable semihost, user must define "DEBUG_ENABLE_SEMIHOST" constant when build code with M051Series BSP.
         This sample code is used to show how to print message/getchar on IDE debug environment.
         It will echo all input character back on UART #1 of KEIL IDE.
@@ -1867,6 +1844,8 @@ int main(void)
 			//if(timerCount % 1000 == 0)
 			//	printf("%ds\n", timerCount / 1000);
 			lastRunTimerCount = timerCount;
+			if(timerCount == 0)
+					debounceTimerCount = 0;
 			
 			/* 50 fps / update frame every 20 ms */
 			if(timerCount > lastFrameTimerCount + 0x20 || timerCount < lastFrameTimerCount){
