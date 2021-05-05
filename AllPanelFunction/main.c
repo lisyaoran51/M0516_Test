@@ -598,8 +598,12 @@ void I2C_SlaveTRx(uint32_t u32Status)
 			
 				readDataLen++;
 			
-				if((unsigned char) I2C_GET_DATA(I2C0) == '\0')	/* end of receive */
+				if((unsigned char) I2C_GET_DATA(I2C0) == 0)//'\0')	/* end of receive */
         {
+					
+					memcpy(i2cReadData[i2cReadDataEndPos], i2cTempReadBuffer, 16);
+					memset(i2cTempReadBuffer, 0, 16);
+					
 					i2cReadDataEndPos++;
 					if(i2cReadDataEndPos == 16)
 						i2cReadDataEndPos = 0;
@@ -610,9 +614,6 @@ void I2C_SlaveTRx(uint32_t u32Status)
 						if(i2cReadDataStartPos == 16)
 							i2cReadDataStartPos = 0;
 					}
-					
-					memcpy(i2cReadData[i2cReadDataEndPos], i2cTempReadBuffer, 16);
-					memset(i2cTempReadBuffer, 0, 16);
 					
 					readDataLen = 0;
 				}
@@ -925,6 +926,7 @@ void ReadPanel(){
 		
 		char tempCommand[16];
 		char value[4];
+		double velocity = 0;
 			
 		for(i = 0; i < 16; i++){
 			if(i & 0x8)
@@ -1010,8 +1012,9 @@ void ReadPanel(){
 								pressedNum = (i-8)/2*8+j;
 								if(pressedKey[pressedNum] == 1){
 										//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
+										velocity = tan(((double)(200 - (timerCount - pressedKeyTime[pressedNum])))/200.0*3.14159265358979323846/2.0)*2;
 										//printf("press [%d] %d %d with speed %ds, velocity %f \n", pressedNum, i, j, timerCount - pressedKeyTime[pressedNum], 
-										//		pow(1.02476732964, (200 - (timerCount - pressedKeyTime[pressedNum])) * 1));
+										//		velocity);
 										pressedKey[pressedNum] = 2;
 									
 										memset(tempCommand, 0x0, 16);
@@ -1021,14 +1024,28 @@ void ReadPanel(){
 										// 127 = 1.02476732964 exp(200-t) big power no difference
 										// sprintf(value, "%03d", (int)pow(1.02476732964, (200 - (timerCount - pressedKeyTime[pressedNum])) * 1));
 										// 127 = 1.01230792234 exp((200-t)*2) 
-										sprintf(value, "%03d", (int)pow(1.01230792234, (200 - (timerCount - pressedKeyTime[pressedNum])) * 2));
+										// sprintf(value, "%03d", (int)pow(1.01230792234, (200 - (timerCount - pressedKeyTime[pressedNum])) * 2));
+										// 127 = 1.0081854132 exp((200-t)*3) 
+										// sprintf(value, "%03d", (int)pow(1.0081854132, (200 - (timerCount - pressedKeyTime[pressedNum])) * 3));
+										// 127 = 1.00613514119 exp((200-t)*4) 
+										// sprintf(value, "%03d", (int)pow(1.00613514119, (200 - (timerCount - pressedKeyTime[pressedNum])) * 4));
+										// 127 = 1.00490510912 exp((200-t)*5) 
+										// sprintf(value, "%03d", (int)pow(1.00490510912, (200 - (timerCount - pressedKeyTime[pressedNum])) * 5));
+										// 127 = 1.0024495544 exp((200-t)*10) 
+										// sprintf(value, "%03d", (int)pow(1.0024495544, (200 - (timerCount - pressedKeyTime[pressedNum])) * 10));
+										// 127 = 1.00122402808 exp((200-t)*20) 
+										// sprintf(value, "%03d", (int)pow(1.00122402808, (200 - (timerCount - pressedKeyTime[pressedNum])) * 20));
+										// 127 = 1.00012357123 exp((200-t)^2) 
+										// sprintf(value, "%03d", (int)pow(1.00012357123, pow(200 - (timerCount - pressedKeyTime[pressedNum]), 2)));
+										// 127 = tan((200-t)/200*(pi/2)*2)
+										sprintf(value, "%03d", (int)(velocity));
 										strncat(tempCommand, value, 3);
 										memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
 										i2cWriteDataEndPos++;
 										if(i2cWriteDataEndPos == 16)
 												i2cWriteDataEndPos = 0;
 										
-										//printf("%s\n", tempCommand);
+										//printf("%s %s %03d\n",value , tempCommand, (int)velocity);
 									
 								}
 								//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
