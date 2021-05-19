@@ -1635,7 +1635,12 @@ void UpdateLightRingEffect(uint16_t elapsedFrameTime){
 		float brightness;
 		int position;
 	
-		if(pwmLightEffectType == 0 || pwmLightEffectType == 2 || pwmLightEffectType == 4)
+		if(pwmLightEffectType == 0){
+				SetPwmLightRing(0);
+				return;
+		}
+
+		if(pwmLightEffectType == 2 || pwmLightEffectType == 4)
 				return;
 		
 		if(pwmLightEffectType == 1){
@@ -1701,8 +1706,10 @@ void DecodeMessage(char* message){
 				value1 = atof(pointer);
 				if(value1 > 0)
 						SetLightRingEffect(1, value1);
+				else if(value1 == 0)
+						SetLightRingEffect(2, value1);	// pause revolving ring
 				else
-						SetLightRingEffect(0, value1);	// turn off
+						SetLightRingEffect(0, value1);	// turn off light ring
 		}
 		else if(strcmp(pointer, "BT") == 0){// BT - bluetooth light ring
 				pointer = strtok(NULL, ",");
