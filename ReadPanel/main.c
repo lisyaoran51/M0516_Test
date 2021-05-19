@@ -41,6 +41,8 @@ uint8_t i2cTempReadBuffer[16] = {0};
 volatile uint8_t writeDataLen = 0;
 volatile uint8_t readDataLen = 0;
 
+int sectionState = 4;
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* Global variables                                                                                        */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -487,8 +489,22 @@ int main(void)
 		//    *10
 		// 14: lower octave
 		
-		while(1)
+		k = 14;
+		
+		while(1)	
 		for(i = 0; i < 16; i++){
+			
+			if(i == k){
+					if(k == 14){
+							i++;
+							k = 15;
+					}
+					else if(k == 15){
+							k = 14;
+							continue;
+					}
+			}
+			
 			if(i & 0x8)
 				SetPin(3, 7, 1);
 			else
@@ -551,6 +567,13 @@ int main(void)
 					
 					if(GetPin(0, j) == 0){
 						printf("read input i:%d j:%d \n",i, j);
+						
+						if(i == 14 && (j ==4 || j == 5)){
+								if(j != sectionState){
+										sectionState = j;
+										printf("state changed. i:%d j:%d \n",i, j);
+								}
+						}
 						// lower octave: i=15, j=2
 						// raise octave: i=15, j=1
 						// left button(velocity): i=14, j=2

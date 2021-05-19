@@ -53,7 +53,15 @@
 		 */
 		uint8_t sectionKnobState = 0;
 		
+		/*
+		 * speed knob and section knob cannot detect at the same time
+		 */
+		uint8_t outputToPass = 14;
 		
+		/*
+		 * speed knob state is changed at last run
+		 */
+		uint8_t hasLastSpeedKnobState = 0;
 
 
 /*---------------------------------------------------------------------------------------------------------*/
@@ -911,7 +919,6 @@ uint32_t GetPin(uint8_t port, uint8_t pin){
 
 void ReadPanel(){
 	
-		
 		/*
 		*	P0.0~P0.7 is KB in
 		* P3.2 KB out A
@@ -922,13 +929,34 @@ void ReadPanel(){
 	
 		uint8_t i, j, k;
 	
+		uint8_t hasThisSpeedKnobState = 0;
+		
+		/*
+		 * if this run is after debouce
+		 */
+		uint8_t isAfterDebounce = 0;
+	
 		uint8_t pressedNum = 0;
 		
 		char tempCommand[16];
 		char value[4];
 		double velocity = 0;
+	
+		//printf("ReadPanel\n");
 			
 		for(i = 0; i < 16; i++){
+			
+			if(i == outputToPass){
+					if(outputToPass == 14){
+							i++;
+							outputToPass = 15;
+					}
+					else if(outputToPass == 15){
+							outputToPass = 14;
+							continue;
+					}
+			}
+			
 			if(i & 0x8)
 				SetPin(3, 7, 1);
 			else
@@ -1059,7 +1087,7 @@ void ReadPanel(){
 									case 0:
 											if(GetPin(0, 4) == 0 && GetPin(0, 5) != 0){
 													sectionKnobState = 1;
-													printf("section knob forward.\n");
+													printf("section knob forward. %d\n", i2cWriteDataEndPos);
 												
 													memset(tempCommand, 0x0, 16);
 													sprintf(tempCommand, "1020,1");
@@ -1071,7 +1099,7 @@ void ReadPanel(){
 											}
 											else if(GetPin(0, 5) == 0 && GetPin(0, 4) != 0){
 													sectionKnobState = 2;
-													printf("section knob backward.\n");
+													printf("section knob backward. %d\n", i2cWriteDataEndPos);
 													
 													memset(tempCommand, 0x0, 16);
 													sprintf(tempCommand, "1020,-1");
@@ -1192,29 +1220,39 @@ void ReadPanel(){
 													}
 													break;
 											case 4:
-													if(debounceTimerCount + 100 < timerCount){
-															//printf("Speed knob forward.\n");
-														
+													if(debounceTimerCount + 500 < timerCount){
+															isAfterDebounce = 1;
+															hasThisSpeedKnobState = 1;
+															debounceTimerCount = timerCount;
+															if(hasLastSpeedKnobState == 1){
+																	break;
+															}
+															
+															printf("Speed knob forward. %d\n", i2cWriteDataEndPos);
 															memset(tempCommand, 0x0, 16);
 														  sprintf(tempCommand, "1021,1");
 														  memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
 														  i2cWriteDataEndPos++;
 														  if(i2cWriteDataEndPos == 16)
 														  		i2cWriteDataEndPos = 0;
-															debounceTimerCount = timerCount;
 													}
 													break;
 											case 5:
-													if(debounceTimerCount + 100 < timerCount){
-															//printf("Speed knob backward.\n");
-														
+													if(debounceTimerCount + 500 < timerCount){
+															isAfterDebounce = 1;
+															hasThisSpeedKnobState = 1;
+															debounceTimerCount = timerCount;
+															if(hasLastSpeedKnobState == 1){
+																	break;
+															}
+															
+															printf("Speed knob backward. %d\n", i2cWriteDataEndPos);
 															memset(tempCommand, 0x0, 16);
 															sprintf(tempCommand, "1021,-1");
 															memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
 															i2cWriteDataEndPos++;
 															if(i2cWriteDataEndPos == 16)
 																	i2cWriteDataEndPos = 0;
-															debounceTimerCount = timerCount;
 													}
 													break;
 											}
@@ -1346,6 +1384,19 @@ void ReadPanel(){
 					}
 				}
 			}
+		}
+		// if last run has no speed knob state, then enable speed knob input
+		//if(hasThisSpeedKnobState == 0 && isAfterDebounce == 1){
+		//		printf("this run NOT has speed knob state.\n");
+		//		hasLastSpeedKnobState = 0;
+		//}
+		if(hasThisSpeedKnobState == 0 && debounceTimerCount + 500 < timerCount){
+				//printf("this run NOT has speed knob state.\n");
+				hasLastSpeedKnobState = 0;
+		}
+		else if(isAfterDebounce == 1){
+				//printf("this run has speed knob state.\n");
+				hasLastSpeedKnobState = 1;
 		}
 		
 		if(GetPin(4, 0) == 1){
