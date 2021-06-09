@@ -18,6 +18,9 @@
 #define PLLCON_SETTING      CLK_PLLCON_50MHz_HXT
 #define PLL_CLOCK           50000000
 
+#define VK49KEY
+//#define VK24KEY_X2
+
 /*---------------------------------------------------------------------------------------------------------*/
 /* GPIO varaibles                                                                              						 */
 /*---------------------------------------------------------------------------------------------------------*/
@@ -52,6 +55,9 @@
 		 * 2:backward state
 		 */
 		uint8_t sectionKnobState = 0;
+		
+		
+		uint8_t speedKnobState = 0;
 		
 		/*
 		 * speed knob and section knob cannot detect at the same time
@@ -170,6 +176,11 @@ uint32_t lastAdcScanTimerCount = 0;
  */
 uint32_t debounceTimerCount = 0;
 
+/*
+ * read panel record time in ms
+ */
+uint32_t readPanelTimerCount = 0;
+
 /**
  * @brief       Timer0 IRQ
  *
@@ -186,7 +197,7 @@ void TMR0_IRQHandler(void)
         /* Clear Timer0 time-out interrupt flag */
         TIMER_ClearIntFlag(TIMER0);
 
-        timerCount++;
+        timerCount+=2;
     }
 }
 
@@ -898,7 +909,8 @@ void setTimer(){
     printf("  And be waken-up while Timer0 interrupt count is reaching 4.\n\n");
 	
 		/* Open Timer0 frequency to 2 Hz in toggle-output mode */
-		TIMER0->TCMPR = __LIRC / 1000UL;	// 1khz
+		TIMER0->TCMPR = __LIRC / 10000UL;	// 10khz
+		//TIMER0->TCMPR = __LIRC / 5000UL;	// 10khz ,don't know why the speed is two times slower
 		TIMER0->TCSR = TIMER_TOGGLE_MODE | TIMER_TCSR_IE_Msk | TIMER_TCSR_WAKE_EN_Msk;
 		TIMER0->TCSR = TIMER_TCSR_IE_Msk | TIMER_PERIODIC_MODE;
 	
@@ -927,7 +939,7 @@ void ReadPanel(){
 		* P3.7 KB out Enable
 		*/
 	
-		uint8_t i, j, k;
+		uint8_t i, j, k, l;
 	
 		uint8_t hasThisSpeedKnobState = 0;
 		
@@ -941,10 +953,12 @@ void ReadPanel(){
 		char tempCommand[16];
 		char value[4];
 		double velocity = 0;
+		
+		long readCount = 0;
 	
 		//printf("ReadPanel\n");
 			
-		for(i = 0; i < 16; i++){
+		for(i = 0; i < 16; i++){//16; i++){
 			
 			if(i == outputToPass){
 					if(outputToPass == 14){
@@ -978,6 +992,20 @@ void ReadPanel(){
 				SetPin(3, 2, 0);
 			
 			for(j = 0; j < 8; j++){
+				//if(i > 13 && (j == 4 || j == 5)){
+				//	for(k = 0; k < 255; k++){
+				//		for(l = 0; l < 16; l++){
+				//				printf(" ");
+				//		}
+				//	}
+				//}
+				//
+				////printf(" ");
+				//if(GetPin(0, j) == 0 && i > 13 && (j == 4 || j == 5)){
+				//		printf("get input i:%d j:%d\n", i, j);
+				//		//printf("\n");
+				//}
+				
 				if(i == 8 || i ==10 || i == 12){	// press first pad
 					
 						pressedNum = (i-8)/2*8+j;
@@ -1032,6 +1060,7 @@ void ReadPanel(){
 						else if(pressedKey[pressedNum] == 1){	// means on pressed first pad then release
 								pressedKeyTime[pressedNum] = 0;
 								pressedKey[pressedNum] = 0;
+								//printf("release [%d]\n", pressedNum);
 						}
 						
 				}
@@ -1040,7 +1069,8 @@ void ReadPanel(){
 								pressedNum = (i-8)/2*8+j;
 								if(pressedKey[pressedNum] == 1){
 										//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
-										velocity = tan(((double)(200 - (timerCount - pressedKeyTime[pressedNum])))/200.0*3.14159265358979323846/2.0)*2;
+										//velocity = tan(((double)(200 - (timerCount - pressedKeyTime[pressedNum])))/200.0*3.14159265358979323846/2.0)*2;
+										velocity = (timerCount - pressedKeyTime[pressedNum]) / 2;
 										//printf("press [%d] %d %d with speed %ds, velocity %f \n", pressedNum, i, j, timerCount - pressedKeyTime[pressedNum], 
 										//		velocity);
 										pressedKey[pressedNum] = 2;
@@ -1066,23 +1096,151 @@ void ReadPanel(){
 										// 127 = 1.00012357123 exp((200-t)^2) 
 										// sprintf(value, "%03d", (int)pow(1.00012357123, pow(200 - (timerCount - pressedKeyTime[pressedNum]), 2)));
 										// 127 = tan((200-t)/200*(pi/2)*2)
-										sprintf(value, "%03d", (int)(velocity));
-										strncat(tempCommand, value, 3);
+										sprintf(value, "%04d", (int)(velocity));
+										strncat(tempCommand, value, 4);
 										memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
 										i2cWriteDataEndPos++;
 										if(i2cWriteDataEndPos == 16)
 												i2cWriteDataEndPos = 0;
 										
-										//printf("%s %s %03d\n",value , tempCommand, (int)velocity);
+										printf("%s %s %04d\n",value , tempCommand, (int)velocity);
 									
 								}
 								//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
 						}
 				}
+#ifdef VK49KEY
+				/*			i		j					i		j
+				 *	24: 3  67			36: 7  23
+				 *	25:	2  67			37: 6  23
+				 *	26:	1  67			38: 5  23
+				 *	27:	0	 67			39: 4  23
+				 *	28:	7  45			40: 3  23
+				 *	29:	6  45			41: 2  23
+				 *	30:	5  45			42: 1  23
+				 *	31:	4  45			43: 0  23
+				 *	32:	3  45			44: 7  01
+				 *	33:	2  45			45: 6  01
+				 *	34:	1  45			46: 5  01
+				 *	35:	0  45			47: 4  01
+				 */
+				else if(i == 0 || i == 2 || i == 4 || i == 6){
+						
+						pressedNum = (6-i)/2*8+24 + (j<4?(3-j):(7-j-4));
+						if(GetPin(0, j) == 0 && pressedNum < 48 && pressedNum > 23){
+								if(pressedKey[pressedNum] == 0){
+										pressedKeyTime[pressedNum] = timerCount;
+										pressedKey[pressedNum] = 1;
+										
+										/*
+										memset(tempCommand, 0x0, 16);
+										sprintf(value, "%03d", 127 + 23 - pressedNum);
+										strncpy(tempCommand, value, 3);
+										//printf("read input %s \n",tempCommand);
+										strncat(tempCommand, ",", 1);
+										//tempCommand[4] = ',';
+										sprintf(value, "%03d", rand()%128);
+										strncat(tempCommand, value, 3);
+										//printf("read input %s \n",tempCommand);
+										//strncat(tempCommand, "\0", 1);
+										
+										//printf("end char %d \n",tempCommand[7]);
+										
+										memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+										i2cWriteDataEndPos++;
+										if(i2cWriteDataEndPos == 16)
+											i2cWriteDataEndPos = 0;
+										*/
+										
+										//printf("read input %s %d\n",tempCommand, i2cWriteDataEndPos);
+										//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
+									
+								}
+						}
+						else if((pressedKey[pressedNum] == 2 || // means the second pad was pressed
+										 pressedKey[pressedNum] == 3) && pressedNum < 48 && pressedNum > 23){  // means after release second pad
+								//printf("release [%d] - %d %d at %ds\n", pressedNum, i, j, timerCount);
+								
+								memset(tempCommand, 0x0, 16);
+								sprintf(value, "%03d", 127 + pressedNum);
+								strncpy(tempCommand, value, 3);
+								strncat(tempCommand, ",-1", 3);
+								memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+								i2cWriteDataEndPos++;
+								if(i2cWriteDataEndPos == 16)
+										i2cWriteDataEndPos = 0;
+								
+										
+								//printf("%s\n", tempCommand);
+								
+								pressedKey[pressedNum] = 0;
+						}
+						else if(pressedKey[pressedNum] == 1 && pressedNum < 48 && pressedNum > 23){	// means on pressed first pad then release
+								pressedKeyTime[pressedNum] = 0;
+								pressedKey[pressedNum] = 0;
+								//printf("release [%d]\n", pressedNum);
+						}
+						
+				
+				}
+				else if(i == 1 || i == 3 || i == 5 || i == 7){	// press second pad
+						if(GetPin(0, j) == 0){
+								pressedNum = (7-i)/2*8+24 + (j<4?(3-j):(7-j-4));
+								if(pressedKey[pressedNum] == 1 && pressedNum < 48 && pressedNum > 23){
+										//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
+										//velocity = tan(((double)(200 - (timerCount - pressedKeyTime[pressedNum])))/200.0*3.14159265358979323846/2.0)*2;
+										velocity = (timerCount - pressedKeyTime[pressedNum]) / 2;
+										//printf("press [%d] %d %d with speed %ds, velocity %f \n", pressedNum, i, j, timerCount - pressedKeyTime[pressedNum], 
+										//		velocity);
+										pressedKey[pressedNum] = 2;
+									
+										memset(tempCommand, 0x0, 16);
+										sprintf(value, "%03d", 127 + pressedNum);
+										strncpy(tempCommand, value, 3);
+										strncat(tempCommand, ",", 1);
+										// 127 = 1.02476732964 exp(200-t) big power no difference
+										// sprintf(value, "%03d", (int)pow(1.02476732964, (200 - (timerCount - pressedKeyTime[pressedNum])) * 1));
+										// 127 = 1.01230792234 exp((200-t)*2) 
+										// sprintf(value, "%03d", (int)pow(1.01230792234, (200 - (timerCount - pressedKeyTime[pressedNum])) * 2));
+										// 127 = 1.0081854132 exp((200-t)*3) 
+										// sprintf(value, "%03d", (int)pow(1.0081854132, (200 - (timerCount - pressedKeyTime[pressedNum])) * 3));
+										// 127 = 1.00613514119 exp((200-t)*4) 
+										// sprintf(value, "%03d", (int)pow(1.00613514119, (200 - (timerCount - pressedKeyTime[pressedNum])) * 4));
+										// 127 = 1.00490510912 exp((200-t)*5) 
+										// sprintf(value, "%03d", (int)pow(1.00490510912, (200 - (timerCount - pressedKeyTime[pressedNum])) * 5));
+										// 127 = 1.0024495544 exp((200-t)*10) 
+										// sprintf(value, "%03d", (int)pow(1.0024495544, (200 - (timerCount - pressedKeyTime[pressedNum])) * 10));
+										// 127 = 1.00122402808 exp((200-t)*20) 
+										// sprintf(value, "%03d", (int)pow(1.00122402808, (200 - (timerCount - pressedKeyTime[pressedNum])) * 20));
+										// 127 = 1.00012357123 exp((200-t)^2) 
+										// sprintf(value, "%03d", (int)pow(1.00012357123, pow(200 - (timerCount - pressedKeyTime[pressedNum]), 2)));
+										// 127 = tan((200-t)/200*(pi/2)*2)
+										sprintf(value, "%04d", (int)(velocity));
+										strncat(tempCommand, value, 4);
+										memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+										i2cWriteDataEndPos++;
+										if(i2cWriteDataEndPos == 16)
+												i2cWriteDataEndPos = 0;
+										
+										printf("%s %s %04d\n",value , tempCommand, (int)velocity);
+									
+								}
+								//printf("read input [%d] %d %d at %ds\n", pressedNum, i, j, timerCount);
+						}
+				}
+#endif
 				else{
+					//continue;
+					//if(timerCount / 10 > readPanelTimerCount || timerCount / 10 < readPanelTimerCount){
+					//		readPanelTimerCount = timerCount / 10;
+					//}
+					//else{
+					//		continue;
+					//}
 					
 					if(GetPin(0, j) == 0){
 							if(i ==14 && (j == 4 || j == 5)){
+								
 									switch(sectionKnobState){
 									case 0:
 											if(GetPin(0, 4) == 0 && GetPin(0, 5) != 0){
@@ -1117,6 +1275,8 @@ void ReadPanel(){
 											}
 											break;
 									}
+									
+									
 							}
 							else{
 									if(i == 14){
@@ -1219,7 +1379,9 @@ void ReadPanel(){
 																	i2cWriteDataEndPos = 0;
 													}
 													break;
+													/*
 											case 4:
+													break;
 													if(debounceTimerCount + 500 < timerCount){
 															isAfterDebounce = 1;
 															hasThisSpeedKnobState = 1;
@@ -1238,6 +1400,7 @@ void ReadPanel(){
 													}
 													break;
 											case 5:
+													break;
 													if(debounceTimerCount + 500 < timerCount){
 															isAfterDebounce = 1;
 															hasThisSpeedKnobState = 1;
@@ -1255,6 +1418,86 @@ void ReadPanel(){
 																	i2cWriteDataEndPos = 0;
 													}
 													break;
+													*/
+											}
+											if(i ==15 && (j == 4 || j == 5)){
+													/*
+													// 0 (no) -> 1 (4) -> 2 (5) -> 3 (4off) ->4 (5off)
+													switch(speedKnobState){
+													case 0:
+															if(GetPin(0, 4) != 0 && GetPin(0, 5) == 0){
+																	speedKnobState = 1;
+																	//printf("speed knob forward. %d\n", i2cWriteDataEndPos);
+																	printf("state 1\n");
+															}
+															break;
+													case 1:
+															if(GetPin(0, 4) != 0 && GetPin(0, 5) != 0){
+																	speedKnobState = 2;
+																	//printf("speed knob forward. %d\n", i2cWriteDataEndPos);
+																	printf("state 2\n");
+																
+															}
+															else if(GetPin(0, 4) == 0)
+																	speedKnobState = 0;
+															break;
+																	
+													case 2:
+															if(GetPin(0, 4) == 0 && GetPin(0, 5) != 0){
+																	speedKnobState = 3;
+																	printf("state 3\n");
+															}
+															else if(GetPin(0, 5) == 0)
+																	speedKnobState = 0;
+															break;
+													case 3:
+															if(GetPin(0, 4) == 0 && GetPin(0, 5) == 0){
+																	speedKnobState = 4;
+																	printf("speed knob forward.\n");
+																	speedKnobState = 0;
+															}
+															else if(GetPin(0, 4) != 0)
+																	speedKnobState = 0;
+															
+															break;
+													}
+													*/
+													
+													switch(speedKnobState){
+													case 0:
+															if(GetPin(0, 4) == 0 && GetPin(0, 5) != 0){
+																	speedKnobState = 1;
+																	printf("speed knob forward. %d\n", i2cWriteDataEndPos);
+																
+																	memset(tempCommand, 0x0, 16);
+																	sprintf(tempCommand, "1020,1");
+																	memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+																	i2cWriteDataEndPos++;
+																	if(i2cWriteDataEndPos == 16)
+																			i2cWriteDataEndPos = 0;
+																
+															}
+															else if(GetPin(0, 5) == 0 && GetPin(0, 4) != 0){
+																	speedKnobState = 2;
+																	printf("speed knob backward. %d\n", i2cWriteDataEndPos);
+																	
+																	memset(tempCommand, 0x0, 16);
+																	sprintf(tempCommand, "1020,-1");
+																	memcpy(i2cWriteData[i2cWriteDataEndPos], tempCommand, 16);
+																	i2cWriteDataEndPos++;
+																	if(i2cWriteDataEndPos == 16)
+																			i2cWriteDataEndPos = 0;
+															}
+															break;
+													case 1:
+													case 2:
+															if(GetPin(0, 4) == 0 && GetPin(0, 5) == 0){
+																	speedKnobState = 0;
+																	printf("speed knob floating.\n");
+															}
+															break;
+													}
+													
 											}
 									}
 								
@@ -1624,7 +1867,7 @@ void SetPwmLightRingFading(double brightness){
 	
 		if(brightness > 11)
 				return;
-	
+		
 		//brightnessConverted = 0x1 << brightness / 2;
 		brightnessConverted = pow(2, brightness);
 		
@@ -1705,7 +1948,7 @@ void UpdateLightRingEffect(uint16_t elapsedFrameTime){
 				}
 				
 				/* position = round(time left / total time * 8) */
-				position = 8 - (int)(((float)pwmTimeLengthLeft) * 8.f / (float)pwmTimeLength + 0.5f);
+				position = 8 - (int)(((float)pwmTimeLengthLeft) * 8.f / (float)pwmTimeLength + 1.0f);
 				//printf("test float %f , %f , %f, %f\n", (float)pwmTimeLengthLeft ,((float)pwmTimeLengthLeft) * 8.f, ((float)pwmTimeLengthLeft) * 8.f / (float)pwmTimeLength, round(((float)pwmTimeLengthLeft) * 8.f / (float)pwmTimeLength));
 				//printf("position %d, pwm time left %d\n", position, pwmTimeLengthLeft);
 				if(position < 8){
@@ -1818,7 +2061,7 @@ void ProcessI2cMessage(){
 				if(i2cReadDataStartPos == 16)
 						i2cReadDataStartPos = 0;	
 				
-				printf("%s \n", newCommand);
+				printf("%s | %d \n", newCommand, timerCount);
 				
 				DecodeMessage(newCommand);
 			
@@ -1892,53 +2135,36 @@ int main(void)
 		
 		while(1){
 			
+			//count++;
+			//
+			//if(timerCount % 10000 == 0){
+			//	printf("time %d %d\n", timerCount / 10000, count);
+			//	count = 0;
+			//}
+			
+				
 			ReadPanel();
 			
-			if(timerCount > lastAdcScanTimerCount + 0x10 || timerCount < lastAdcScanTimerCount){
+			if(timerCount > lastAdcScanTimerCount + 100 || timerCount < lastAdcScanTimerCount){
 					AdcContScanModeTest();
 					lastAdcScanTimerCount = timerCount;
 			}
 			
-			//if(count % 1000 == 0)
-				//printf("%d\n", count);
-			
-			//if(timerCount % 1000 == 50){
-			if(count % 1000 == 50 && 0){
-					//SetPwmLightRing(lightPos / 2);
-					SetIndicatorLights(lightPos, 1);
-					SetIndicatorLights(lightPos - 1 < 0 ? 15 : lightPos - 1, 0);
-					if(++lightPos == 16)
-						lightPos = 0;
-					
-					SetSpeedKnobLightRing(lightPos / 2 - 4);
-			}
-			
-			if(++count > 10000)
-				count = 0;
-			
-			//if(timerCount % 1000 == 0)
-			//	printf("%ds\n", timerCount / 1000);
 			lastRunTimerCount = timerCount;
 			if(timerCount == 0)
 					debounceTimerCount = 0;
 			
 			/* 50 fps / update frame every 20 ms */
-			if(timerCount > lastFrameTimerCount + 0x20 || timerCount < lastFrameTimerCount){
+			if(timerCount > lastFrameTimerCount + 200/*200*/ || timerCount < lastFrameTimerCount){
 					
+				
 					if(timerCount > lastFrameTimerCount)
-							UpdateLightRingEffect(timerCount - lastFrameTimerCount);
+							UpdateLightRingEffect((timerCount - lastFrameTimerCount) / 10);
 					lastFrameTimerCount = timerCount;
 				
 					ProcessI2cMessage();
 			}
-			
 		}
-			
-		
-		
-		
-
-    
 }
 
 /*** (C) COPYRIGHT 2013 Nuvoton Technology Corp. ***/
